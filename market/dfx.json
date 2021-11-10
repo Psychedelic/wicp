@@ -1,0 +1,7 @@
+{
+    "canisters": {
+      "market": {
+        "main": "src/market.mo"
+      }
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "canisters": {
+      "1registry": {
+      },
+      "2governance": {      
+      },      
+      "3ledger": {
+        "type": "custom",
+        "candid": "ledger/ledger.did",
+        "wasm": "ledger/ledger-canister-del-whitelist-op.wasm",
+        "source": ["dist"]
+      },
+      "wicp": {
+        "main": "src/wicp.mo"
+      }
+    },
+    "networks": {
+      "local": {
+        "bind": "127.0.0.1:8000",
+        "type": "ephemeral"
+      }
+    },
+    "version": 1
+  }
