@@ -87,7 +87,6 @@ dfx canister --no-wallet call wicp totalSupply
 dfx canister --no-wallet call 3ledger account_balance_dfx '(record {account="b5c38c5c8e63d89751b8f8b3fd9deceda70c281b87957ca44319c9758a3dbef2";})'
 (record { e8s = 21_000_000_000 : nat64 })
 
-# 因为已经成功 mint，不能再次 mint。
  dfx canister --no-wallet call 3ledger notify_dfx "record {block_height=6:nat64;max_fee=record{e8s=10000:nat64};from_subaccount=null;to_canister=principal \"r7inp-6aaaa-aaaaa-aaabq-cai\";to_subaccount=null}"
 [Canister ryjl3-tyaaa-aaaaa-aaaba-cai] [ledger] Checking the ledger for block [6]
 [Canister ryjl3-tyaaa-aaaaa-aaaba-cai] Panicked at 'Notification failed: "The notification state is already true', rosetta-api/ledger_canister/src/main.rs:271:68

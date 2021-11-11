@@ -20,7 +20,7 @@ import Result "mo:base/Result";
 import Debug "mo:base/Debug";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
 
-shared(msg) actor class Token(
+shared(msg) actor class WICP(
     _logo: Text,
     _owner: Principal
     ) = this {
