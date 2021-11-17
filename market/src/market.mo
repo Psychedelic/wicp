@@ -146,7 +146,7 @@ shared(msg) actor class Market(owner_: Principal, wicp_: Principal, ledgerProxy_
     };
 
     private stable var _1e6 = 1_000_000;
-    private stable var maxBuyAmount = 10;
+    private stable var maxBuyAmount = 5; // max pending buy orders
     private stable var owner: Principal = owner_;
     private stable var wicp: TokenActor = actor(Principal.toText(wicp_));
     private stable var ledgerProxy: LedgerProxy = actor(Principal.toText(ledgerProxy_));
@@ -157,6 +157,7 @@ shared(msg) actor class Market(owner_: Principal, wicp_: Principal, ledgerProxy_
     private stable var buyIndex: Nat = 0;
     private var sellOrders = HashMap.HashMap<Nat, SellOrder>(0, Nat.equal, Hash.hash);
     private var buyOrders = HashMap.HashMap<Nat, BuyOrder>(0, Nat.equal, Hash.hash);
+    // user pending buy orders
     private var buyAmounts = HashMap.HashMap<Principal, Nat>(0, Principal.equal, Principal.hash);
     private stable var openSellOrders: TrieSet.Set<Nat> = TrieSet.empty();
     private stable var openBuyOrders: TrieSet.Set<Nat> = TrieSet.empty();
