@@ -12,6 +12,7 @@ use ic_types::{CanisterId, PrincipalId};
 use ledger_canister::{Memo, icpts::ICPTs, TransactionNotification, account_identifier::AccountIdentifier, SendArgs};
 use std::collections::HashMap;
 use std::iter::FromIterator;
+use std::result;
 use std::string::String;
 
 #[derive(Deserialize, CandidType, Clone, Debug)]
@@ -369,9 +370,9 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
         created_at_time: None,
     };
     let balances = ic::get_mut::<Balances>();
-    balances.insert(caller, caller_balance - value_nat.clone());
+    balances.insert(caller, caller_balance.clone() - value_nat.clone());
     metadata.total_supply -= value_nat.clone();
-    let result = ic::call(Principal::from(CanisterId::get(LEDGER_CANISTER_ID)), "send_dfx", args).await;
+    let result: Result<(u64,), _> = ic::call(Principal::from(CanisterId::get(LEDGER_CANISTER_ID)), "send_dfx", (args,)).await;
     match result {
         Ok(_) => {
             let txid = add_record( 
