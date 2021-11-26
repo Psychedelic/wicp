@@ -9,17 +9,6 @@ type Metadata = record {
   total_supply : nat;
   symbol : text;
 };
-type OpRecord = record {
-  op : Operation;
-  to : principal;
-  fee : nat;
-  status : TransactionStatus;
-  from : principal;
-  timestamp : nat64;
-  caller : opt principal;
-  index : nat64;
-  amount : nat;
-};
 type Operation = variant { Approve; Burn; Mint; Transfer; TransferFrom };
 type Result = variant { Ok : nat64; Err : TxError };
 type TokenInfo = record {
@@ -39,15 +28,27 @@ type TransactionNotification = record {
   amount : ICPTs;
   block_height : nat64;
 };
-type TransactionStatus = variant { Failed; Succeeded; Inprogress };
+type TransactionStatus = variant { Failed; Succeeded };
 type TxError = variant {
   InsufficientAllowance;
   InsufficientBalance;
   Unauthorized;
   LedgerTrap;
+  Other;
   AmountTooSmall;
 };
-service : (text, text, text, nat8, nat, principal, nat) -> {
+type TxRecord = record {
+  to : principal;
+  fee : nat;
+  status : TransactionStatus;
+  from : principal;
+  operation : Operation;
+  timestamp : int;
+  caller : opt principal;
+  index : nat;
+  amount : nat;
+};
+service : (text, text, text, nat8, principal, nat, principal) -> {
   allowance : (principal, principal) -> (nat) query;
   approve : (principal, nat) -> (Result);
   balanceOf : (principal) -> (nat) query;
@@ -57,11 +58,11 @@ service : (text, text, text, nat8, nat, principal, nat) -> {
   getLogo : () -> (text) query;
   getMetadta : () -> (Metadata) query;
   getTokenInfo : () -> (TokenInfo) query;
-  getTransaction : (nat64) -> (OpRecord) query;
-  getTransactions : (nat64, nat64) -> (vec OpRecord) query;
+  getTransaction : (nat64) -> (TxRecord);
+  getTransactions : (nat64, nat64) -> (vec TxRecord) query;
   getUserApprovals : (principal) -> (vec record { principal; nat }) query;
   getUserTransactionAmount : (principal) -> (nat64) query;
-  getUserTransactions : (principal, nat64, nat64) -> (vec OpRecord) query;
+  getUserTransactions : (principal, nat64, nat64) -> (vec TxRecord) query;
   historySize : () -> (nat64) query;
   name : () -> (text) query;
   owner : () -> (principal) query;

@@ -5,15 +5,28 @@
 * Maintainer : DFinance Team <hello@dfinance.ai>
 * Stability  : Experimental
 */
-use candid::{candid_method, CandidType, Deserialize, types::number::Nat};
+use candid::{candid_method, CandidType, Deserialize, Int, Nat};
+use cap_sdk::{handshake, insert, Event, IndefiniteEvent, TypedEvent};
+use cap_std::dip20::cap::DIP20Details;
+use cap_std::dip20::{Operation, TransactionStatus, TxRecord};
 use ic_kit::{ic , Principal};
 use ic_cdk_macros::*;
 use ic_types::{CanisterId, PrincipalId};
 use ledger_canister::{Memo, icpts::ICPTs, TransactionNotification, account_identifier::AccountIdentifier, SendArgs};
 use std::collections::HashMap;
+use std::collections::VecDeque;
+use std::convert::Into;
 use std::iter::FromIterator;
-use std::result;
 use std::string::String;
+
+#[derive(CandidType, Default, Deserialize)]
+pub struct TxLog {
+    pub ie_records: VecDeque<IndefiniteEvent>,
+}
+
+pub fn tx_log<'a>() -> &'a mut TxLog {
+    ic_kit::ic::get_mut::<TxLog>()
+}
 
 #[derive(Deserialize, CandidType, Clone, Debug)]
 struct Metadata {
@@ -55,83 +68,21 @@ impl Default for Metadata {
 
 type Balances = HashMap<Principal, Nat>;
 type Allowances = HashMap<Principal, HashMap<Principal, Nat>>;
-type Ops = Vec<OpRecord>;
-
-#[derive(Deserialize, CandidType)]
-struct UpgradePayload {
-    metadata: Metadata,
-    balance: Vec<(Principal, Nat)>,
-    allow: Vec<(Principal, Vec<(Principal, Nat)>)>,
-}
-
-#[derive(CandidType, Clone, Copy, Debug, PartialEq)]
-enum Operation {
-    Mint,
-    Burn,
-    Transfer,
-    TransferFrom,
-    Approve,
-}
-
-#[derive(CandidType, Clone, Copy, Debug, PartialEq)]
-enum TransactionStatus {
-    Succeeded,
-    Inprogress,
-    Failed,
-}
-
-#[derive(CandidType, Clone, Debug)]
-struct OpRecord {
-    caller: Option<Principal>,
-    op: Operation,
-    index: usize,
-    from: Principal,
-    to: Principal,
-    amount: Nat,
-    fee: Nat,
-    timestamp: u64,
-    status: TransactionStatus,
-}
 
 #[derive(CandidType, Debug, PartialEq)]
-enum TxError {
+pub enum TxError {
     InsufficientBalance,
     InsufficientAllowance,
     Unauthorized,
     LedgerTrap,
     AmountTooSmall,
+    Other,
 }
 type TxReceipt = Result<usize, TxError>;
 
 const LEDGER_CANISTER_ID: CanisterId = CanisterId::from_u64(2);
 const THRESHOLD: ICPTs = ICPTs::from_e8s(0); // 0;
 const ICPFEE: ICPTs = ICPTs::from_e8s(10000);
-
-fn add_record(
-    caller: Option<Principal>,
-    op: Operation,
-    from: Principal,
-    to: Principal,
-    amount: Nat,
-    fee: Nat,
-    timestamp: u64,
-    status: TransactionStatus,
-) -> usize {
-    let ops = ic::get_mut::<Ops>();
-    let index = ops.len();
-    ops.push(OpRecord {
-        caller,
-        op,
-        index,
-        from,
-        to,
-        amount,
-        fee,
-        timestamp,
-        status,
-    });
-    index
-}
 
 #[init]
 #[candid_method(init)]
@@ -140,26 +91,25 @@ fn init(
     name: String,
     symbol: String,
     decimals: u8,
-    total_supply: Nat,
     owner: Principal,
     fee: Nat,
+    cap: Principal,
 ) {
     let metadata = ic::get_mut::<Metadata>();
     metadata.logo = logo;
     metadata.name = name;
     metadata.symbol = symbol;
     metadata.decimals = decimals;
-    metadata.total_supply = total_supply.clone();
+    metadata.total_supply = Nat::from(0);
     metadata.owner = owner;
     metadata.fee = fee;
-    let balances = ic::get_mut::<Balances>();
-    balances.insert(owner, total_supply.clone());
+    handshake(1_000_000, Some(cap));
     let _ = add_record(
         Some(owner),
         Operation::Mint,
         Principal::from_text("aaaaa-aa").unwrap(),
         owner,
-        total_supply,
+        Nat::from(0),
         Nat::from(0),
         ic::time(),
         TransactionStatus::Succeeded,
@@ -191,7 +141,7 @@ fn _charge_fee(user: Principal, fee_to: Principal, fee: Nat) {
 
 #[update(name = "transfer")]
 #[candid_method(update)]
-fn transfer(to: Principal, value: Nat) -> TxReceipt {
+async fn transfer(to: Principal, value: Nat) -> TxReceipt {
     let from = ic::caller();
     let metadata = ic::get::<Metadata>();
     if balance_of(from) < value.clone() + metadata.fee.clone() {
@@ -199,7 +149,8 @@ fn transfer(to: Principal, value: Nat) -> TxReceipt {
     }
     _charge_fee(from, metadata.fee_to, metadata.fee.clone());
     _transfer(from, to, value.clone());
-    let txid = add_record(
+    
+    add_record(
         None,
         Operation::Transfer,
         from,
@@ -208,13 +159,13 @@ fn transfer(to: Principal, value: Nat) -> TxReceipt {
         metadata.fee.clone(),
         ic::time(),
         TransactionStatus::Succeeded,
-    );
-    Ok(txid)
+    )
+    .await
 }
 
 #[update(name = "transferFrom")]
 #[candid_method(update, rename = "transferFrom")]
-fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt {
+async fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt {
     let owner = ic::caller();
     let from_allowance = allowance(from, owner);
     let metadata = ic::get::<Metadata>();
@@ -248,7 +199,7 @@ fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt {
             assert!(false);
         }
     }
-    let txid = add_record(
+    add_record(
         Some(owner),
         Operation::TransferFrom,
         from,
@@ -257,13 +208,13 @@ fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt {
         metadata.fee.clone(),
         ic::time(),
         TransactionStatus::Succeeded,
-    );
-    Ok(txid)
+    )
+    .await
 }
 
 #[update(name = "approve")]
 #[candid_method(update)]
-fn approve(spender: Principal, value: Nat) -> TxReceipt {
+async fn approve(spender: Principal, value: Nat) -> TxReceipt {
     let owner = ic::caller();
     let metadata = ic::get::<Metadata>();
     if balance_of(owner) < metadata.fee.clone() {
@@ -275,7 +226,7 @@ fn approve(spender: Principal, value: Nat) -> TxReceipt {
     match allowances.get(&owner) {
         Some(inner) => {
             let mut temp = inner.clone();
-            if v != 0 {
+            if v.clone() != 0 {
                 temp.insert(spender, v.clone());
                 allowances.insert(owner, temp);
             } else {
@@ -288,7 +239,7 @@ fn approve(spender: Principal, value: Nat) -> TxReceipt {
             }
         }
         None => {
-            if v != 0 {
+            if v.clone() != 0 {
                 let mut inner = HashMap::new();
                 inner.insert(spender, v.clone());
                 let allowances = ic::get_mut::<Allowances>();
@@ -296,7 +247,7 @@ fn approve(spender: Principal, value: Nat) -> TxReceipt {
             }
         }
     }
-    let txid = add_record(
+    add_record(
         None,
         Operation::Approve,
         owner,
@@ -305,13 +256,13 @@ fn approve(spender: Principal, value: Nat) -> TxReceipt {
         metadata.fee.clone(),
         ic::time(),
         TransactionStatus::Succeeded,
-    );
-    Ok(txid)
+    )
+    .await
 }
 
 #[update(name = "transaction_notification")]
 #[candid_method(update, rename = "transaction_notification")]
-fn transaction_notification(tn: TransactionNotification) -> TxReceipt {
+async fn transaction_notification(tn: TransactionNotification) -> TxReceipt {
     let caller = ic::caller();
     let caller_p = PrincipalId::from(caller);
     if CanisterId::new(caller_p) != Ok(LEDGER_CANISTER_ID) {
@@ -335,17 +286,17 @@ fn transaction_notification(tn: TransactionNotification) -> TxReceipt {
     let metadata = ic::get_mut::<Metadata>();
     metadata.total_supply += value.clone();
     
-    let txid = add_record(
+    add_record(
         Some(caller),
         Operation::Mint,
-        Principal::from_text("aaaaa-aa").unwrap(),
+        user,
         user,
         value,
         Nat::from(0),
         ic::time(),
         TransactionStatus::Succeeded,
-    );
-    Ok(txid)
+    )
+    .await
 }
 
 #[update(name = "withdraw")]
@@ -375,20 +326,21 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
     let result: Result<(u64,), _> = ic::call(Principal::from(CanisterId::get(LEDGER_CANISTER_ID)), "send_dfx", (args,)).await;
     match result {
         Ok(_) => {
-            let txid = add_record( 
-                Some(caller),
+            add_record(
+                None,
                 Operation::Burn,
                 caller,
-                Principal::from_text("aaaaa-aa").unwrap(),
+                caller,
                 value_nat,
                 Nat::from(0),
                 ic::time(),
                 TransactionStatus::Succeeded,
-            );
-            return Ok(txid);
+            )
+            .await
         },
         Err(_) => {
             balances.insert(caller, caller_balance);
+            metadata.total_supply += value_nat;
             return Err(TxError::LedgerTrap);
         },
     }
@@ -497,75 +449,69 @@ fn get_metadata() -> Metadata {
     ic::get::<Metadata>().clone()
 }
 
+
 #[query(name = "historySize")]
 #[candid_method(query, rename = "historySize")]
 fn history_size() -> usize {
-    let ops = ic::get::<Ops>();
-    ops.len()
+    // history handling needs fixing after CAP SDK is ready
+    unimplemented!()
 }
 
-#[query(name = "getTransaction")]
-#[candid_method(query, rename = "getTransaction")]
-fn get_transaction(index: usize) -> OpRecord {
-    let ops = ic::get::<Ops>();
-    ops[index].clone()
+#[update(name = "getTransaction")]
+#[candid_method(update, rename = "getTransaction")]
+async fn get_transaction(_index: usize) -> TxRecord {
+    // let res = cap_sdk::get_transaction(_index as u64)
+    //     .await
+    //     .expect("unable to retrieve transaction from CAP");
+    // ic_cdk::print(format!("{:?}", res));
+    // OpRecord{
+    //     caller: Some(Principal::anonymous()),
+    //     op: Operation::Mint,
+    //     index: 0,
+    //     from: Principal::anonymous(),
+    //     to: Principal::anonymous(),
+    //     amount: 1,
+    //     fee: 2,
+    //     timestamp: 3,
+    //     status: TransactionStatus::Succeeded,
+    //}
+
+    // history handling needs fixing after CAP SDK is ready
+    unimplemented!();
 }
 
 #[query(name = "getTransactions")]
 #[candid_method(query, rename = "getTransactions")]
-fn get_transactions(start: usize, limit: usize) -> Vec<OpRecord> {
-    let mut ret: Vec<OpRecord> = Vec::new();
-    let ops = ic::get::<Ops>();
-    let mut i = start;
-    while i < start + limit && i < ops.len() {
-        ret.push(ops[i].clone());
-        i += 1;
-    }
-    ret
+fn get_transactions(_start: usize, _limit: usize) -> Vec<TxRecord> {
+    // history handling needs fixing after CAP SDK is ready
+    unimplemented!()
 }
 
 #[query(name = "getUserTransactionAmount")]
 #[candid_method(query, rename = "getUserTransactionAmount")]
-fn get_user_transaction_amount(a: Principal) -> usize {
-    let mut res = 0;
-    let ops = ic::get::<Ops>();
-    for i in ops.clone() {
-        if i.caller == Some(a) || i.from == a || i.to == a {
-            res += 1;
-        }
-    }
-    res
+fn get_user_transaction_amount(_user: Principal) -> usize {
+    // history handling needs fixing after CAP SDK is ready
+    unimplemented!()
 }
 
 #[query(name = "getUserTransactions")]
 #[candid_method(query, rename = "getUserTransactions")]
-fn get_user_transactions(a: Principal, start: usize, limit: usize) -> Vec<OpRecord> {
-    let ops = ic::get::<Ops>();
-    let mut res: Vec<OpRecord> = Vec::new();
-    let mut index: usize = 0;
-    for i in ops.clone() {
-        if i.caller == Some(a) || i.from == a || i.to == a {
-            if index >= start && index < start + limit {
-                res.push(i);
-            }
-            index += 1;
-        }
-    }
-    res
+fn get_user_transactions(_user: Principal, _start: usize, _limit: usize) -> Vec<TxRecord> {
+    // history handling needs fixing after CAP SDK is ready
+    unimplemented!()
 }
 
 #[query(name = "getTokenInfo")]
 #[candid_method(query, rename = "getTokenInfo")]
 fn get_token_info() -> TokenInfo {
     let metadata = ic::get::<Metadata>().clone();
-    let ops = ic::get::<Ops>();
     let balance = ic::get::<Balances>();
 
     return TokenInfo {
         metadata: metadata.clone(),
         fee_to: metadata.fee_to,
-        history_size: ops.len(),
-        deploy_time: ops[0].timestamp,
+        history_size: 0, // history handling needs fixing after CAP SDK is ready
+        deploy_time: 0,  // history handling needs fixing after CAP SDK is ready,
         holder_number: balance.len(),
         cycles: ic::balance(),
     };
@@ -620,45 +566,73 @@ fn main() {
 // TODO: fix upgrade functions
 #[pre_upgrade]
 fn pre_upgrade() {
-    let metadata = ic::get::<Metadata>().clone();
-    let mut balance = Vec::new();
-    // let mut allow: Vec<(Principal, Vec<(Principal, Nat)>)> = Vec::new();
-    let mut allow = Vec::new();
-    for (k, v) in ic::get::<Balances>().clone() {
-        balance.push((k, v));
-    }
-    for (k, v) in ic::get::<Allowances>().iter() {
-        let mut item = Vec::new();
-        for (a, b) in v.clone() {
-            item.push((a, b));
-        }
-        allow.push((*k, item));
-    }
-    let up = UpgradePayload {
-        metadata,
-        balance,
-        allow,
-    };
-    ic::stable_store((up,)).unwrap();
+    ic::stable_store((ic::get::<Metadata>().clone(),ic::get::<Balances>(), ic::get::<Allowances>(), tx_log())).unwrap();
 }
 
 #[post_upgrade]
 fn post_upgrade() {
-    // There can only be one value in stable memory, currently. otherwise, lifetime error.
-    // https://docs.rs/ic-cdk/0.3.0/ic_cdk/storage/fn.stable_restore.html
-    let (down,): (UpgradePayload,) = ic::stable_restore().unwrap();
+    let (metadata_stored, balances_stored, allowances_stored, tx_log_stored): (Metadata,Balances,Allowances,TxLog) = ic::stable_restore().unwrap();
     let metadata = ic::get_mut::<Metadata>();
-    *metadata = down.metadata;
-    for (k, v) in down.balance {
-        ic::get_mut::<Balances>().insert(k, v);
+    *metadata = metadata_stored;
+
+    let balances = ic::get_mut::<Balances>();
+    *balances = balances_stored;
+
+    let allowances = ic::get_mut::<Allowances>();
+    *allowances = allowances_stored;
+
+    let tx_log = tx_log();
+    *tx_log = tx_log_stored;
+}
+
+
+async fn add_record(
+    caller: Option<Principal>,
+    op: Operation,
+    from: Principal,
+    to: Principal,
+    amount: Nat,
+    fee: Nat,
+    timestamp: u64,
+    status: TransactionStatus,
+) -> TxReceipt {
+    insert_into_cap(Into::<IndefiniteEvent>::into(Into::<Event>::into(Into::<
+        TypedEvent<DIP20Details>,
+    >::into(
+        TxRecord {
+            caller,
+            index: Nat::from(0),
+            from,
+            to,
+            amount: Nat::from(amount),
+            fee: Nat::from(fee),
+            timestamp: Int::from(timestamp),
+            status,
+            operation: op,
+        },
+    ))))
+    .await
+}
+
+pub async fn insert_into_cap(ie: IndefiniteEvent) -> TxReceipt {
+    let tx_log = tx_log();
+    if let Some(failed_ie) = tx_log.ie_records.pop_front() {
+        let _ = insert_into_cap_priv(failed_ie).await;
     }
-    for (k, v) in down.allow {
-        let mut inner = HashMap::new();
-        for (a, b) in v {
-            inner.insert(a, b);
-        }
-        ic::get_mut::<Allowances>().insert(k, inner);
+    insert_into_cap_priv(ie).await
+}
+
+async fn insert_into_cap_priv(ie: IndefiniteEvent) -> TxReceipt {
+    let insert_res = insert(ie.clone())
+        .await
+        .map(|tx_id| tx_id as usize)
+        .map_err(|_| TxError::Other);
+
+    if insert_res.is_err() {
+        tx_log().ie_records.push_back(ie.clone());
     }
+
+    insert_res
 }
 
 #[cfg(test)]
