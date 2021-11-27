@@ -38,15 +38,14 @@ struct Metadata {
     owner: Principal,
     fee: Nat,
     fee_to: Principal,
+    history_size: usize,
+    deploy_time: u64,
 }
 
 #[derive(Deserialize, CandidType, Clone, Debug)]
 struct TokenInfo {
     metadata: Metadata,
-    fee_to: Principal,
     // status info
-    history_size: usize,
-    deploy_time: u64,
     holder_number: usize,
     cycles: u64,
 }
@@ -62,6 +61,8 @@ impl Default for Metadata {
             owner: Principal::anonymous(),
             fee: Nat::from(0),
             fee_to: Principal::anonymous(),
+            history_size: 0,
+            deploy_time: 0,
         }
     }
 }
@@ -93,6 +94,7 @@ fn init(
     decimals: u8,
     owner: Principal,
     fee: Nat,
+    fee_to: Principal,
     cap: Principal,
 ) {
     let metadata = ic::get_mut::<Metadata>();
@@ -103,6 +105,9 @@ fn init(
     metadata.total_supply = Nat::from(0);
     metadata.owner = owner;
     metadata.fee = fee;
+    metadata.fee_to = fee_to;
+    metadata.history_size = 1;
+    metadata.deploy_time = ic::time();
     handshake(1_000_000, Some(cap));
     let _ = add_record(
         Some(owner),
@@ -143,13 +148,14 @@ fn _charge_fee(user: Principal, fee_to: Principal, fee: Nat) {
 #[candid_method(update)]
 async fn transfer(to: Principal, value: Nat) -> TxReceipt {
     let from = ic::caller();
-    let metadata = ic::get::<Metadata>();
+    let metadata = ic::get_mut::<Metadata>();
     if balance_of(from) < value.clone() + metadata.fee.clone() {
         return Err(TxError::InsufficientBalance);
     }
     _charge_fee(from, metadata.fee_to, metadata.fee.clone());
     _transfer(from, to, value.clone());
-    
+    metadata.history_size += 1;
+
     add_record(
         None,
         Operation::Transfer,
@@ -168,7 +174,7 @@ async fn transfer(to: Principal, value: Nat) -> TxReceipt {
 async fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt {
     let owner = ic::caller();
     let from_allowance = allowance(from, owner);
-    let metadata = ic::get::<Metadata>();
+    let metadata = ic::get_mut::<Metadata>();
     if from_allowance < value.clone() + metadata.fee.clone() {
         return Err(TxError::InsufficientAllowance);
     } 
@@ -199,6 +205,7 @@ async fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt 
             assert!(false);
         }
     }
+    metadata.history_size += 1;
     add_record(
         Some(owner),
         Operation::TransferFrom,
@@ -216,7 +223,7 @@ async fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt 
 #[candid_method(update)]
 async fn approve(spender: Principal, value: Nat) -> TxReceipt {
     let owner = ic::caller();
-    let metadata = ic::get::<Metadata>();
+    let metadata = ic::get_mut::<Metadata>();
     if balance_of(owner) < metadata.fee.clone() {
         return Err(TxError::InsufficientBalance);
     }
@@ -247,6 +254,7 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
             }
         }
     }
+    metadata.history_size += 1;
     add_record(
         None,
         Operation::Approve,
@@ -285,7 +293,8 @@ async fn transaction_notification(tn: TransactionNotification) -> TxReceipt {
     balances.insert(user, user_balance + value.clone());
     let metadata = ic::get_mut::<Metadata>();
     metadata.total_supply += value.clone();
-    
+    metadata.history_size += 1;
+
     add_record(
         Some(caller),
         Operation::Mint,
@@ -326,6 +335,7 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
     let result: Result<(u64,), _> = ic::call(Principal::from(CanisterId::get(LEDGER_CANISTER_ID)), "send_dfx", (args,)).await;
     match result {
         Ok(_) => {
+            metadata.history_size += 1;
             add_record(
                 None,
                 Operation::Burn,
@@ -453,52 +463,8 @@ fn get_metadata() -> Metadata {
 #[query(name = "historySize")]
 #[candid_method(query, rename = "historySize")]
 fn history_size() -> usize {
-    // history handling needs fixing after CAP SDK is ready
-    unimplemented!()
-}
-
-#[update(name = "getTransaction")]
-#[candid_method(update, rename = "getTransaction")]
-async fn get_transaction(_index: usize) -> TxRecord {
-    // let res = cap_sdk::get_transaction(_index as u64)
-    //     .await
-    //     .expect("unable to retrieve transaction from CAP");
-    // ic_cdk::print(format!("{:?}", res));
-    // OpRecord{
-    //     caller: Some(Principal::anonymous()),
-    //     op: Operation::Mint,
-    //     index: 0,
-    //     from: Principal::anonymous(),
-    //     to: Principal::anonymous(),
-    //     amount: 1,
-    //     fee: 2,
-    //     timestamp: 3,
-    //     status: TransactionStatus::Succeeded,
-    //}
-
-    // history handling needs fixing after CAP SDK is ready
-    unimplemented!();
-}
-
-#[query(name = "getTransactions")]
-#[candid_method(query, rename = "getTransactions")]
-fn get_transactions(_start: usize, _limit: usize) -> Vec<TxRecord> {
-    // history handling needs fixing after CAP SDK is ready
-    unimplemented!()
-}
-
-#[query(name = "getUserTransactionAmount")]
-#[candid_method(query, rename = "getUserTransactionAmount")]
-fn get_user_transaction_amount(_user: Principal) -> usize {
-    // history handling needs fixing after CAP SDK is ready
-    unimplemented!()
-}
-
-#[query(name = "getUserTransactions")]
-#[candid_method(query, rename = "getUserTransactions")]
-fn get_user_transactions(_user: Principal, _start: usize, _limit: usize) -> Vec<TxRecord> {
-    // history handling needs fixing after CAP SDK is ready
-    unimplemented!()
+    let metadata = ic::get::<Metadata>();
+    metadata.history_size
 }
 
 #[query(name = "getTokenInfo")]
@@ -509,9 +475,6 @@ fn get_token_info() -> TokenInfo {
 
     return TokenInfo {
         metadata: metadata.clone(),
-        fee_to: metadata.fee_to,
-        history_size: 0, // history handling needs fixing after CAP SDK is ready
-        deploy_time: 0,  // history handling needs fixing after CAP SDK is ready,
         holder_number: balance.len(),
         cycles: ic::balance(),
     };

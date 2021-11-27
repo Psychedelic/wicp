@@ -1,21 +1,19 @@
 type ICPTs = record { e8s : nat64 };
 type Metadata = record {
   fee : nat;
+  deploy_time : nat64;
   decimals : nat8;
   fee_to : principal;
   owner : principal;
+  history_size : nat64;
   logo : text;
   name : text;
   total_supply : nat;
   symbol : text;
 };
-type Operation = variant { Approve; Burn; Mint; Transfer; TransferFrom };
 type Result = variant { Ok : nat64; Err : TxError };
 type TokenInfo = record {
-  deploy_time : nat64;
   holder_number : nat64;
-  fee_to : principal;
-  history_size : nat64;
   metadata : Metadata;
   cycles : nat64;
 };
@@ -28,7 +26,6 @@ type TransactionNotification = record {
   amount : ICPTs;
   block_height : nat64;
 };
-type TransactionStatus = variant { Failed; Succeeded };
 type TxError = variant {
   InsufficientAllowance;
   InsufficientBalance;
@@ -37,18 +34,7 @@ type TxError = variant {
   Other;
   AmountTooSmall;
 };
-type TxRecord = record {
-  to : principal;
-  fee : nat;
-  status : TransactionStatus;
-  from : principal;
-  operation : Operation;
-  timestamp : int;
-  caller : opt principal;
-  index : nat;
-  amount : nat;
-};
-service : (text, text, text, nat8, principal, nat, principal) -> {
+service : (text, text, text, nat8, principal, nat, principal, principal) -> {
   allowance : (principal, principal) -> (nat) query;
   approve : (principal, nat) -> (Result);
   balanceOf : (principal) -> (nat) query;
@@ -58,11 +44,7 @@ service : (text, text, text, nat8, principal, nat, principal) -> {
   getLogo : () -> (text) query;
   getMetadta : () -> (Metadata) query;
   getTokenInfo : () -> (TokenInfo) query;
-  getTransaction : (nat64) -> (TxRecord);
-  getTransactions : (nat64, nat64) -> (vec TxRecord) query;
   getUserApprovals : (principal) -> (vec record { principal; nat }) query;
-  getUserTransactionAmount : (principal) -> (nat64) query;
-  getUserTransactions : (principal, nat64, nat64) -> (vec TxRecord) query;
   historySize : () -> (nat64) query;
   name : () -> (text) query;
   owner : () -> (principal) query;
