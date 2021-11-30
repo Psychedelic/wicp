@@ -12,9 +12,10 @@ use cap_std::dip20::{Operation, TransactionStatus, TxRecord};
 use ic_kit::{ic , Principal};
 use ic_cdk_macros::*;
 use ic_types::{CanisterId, PrincipalId};
-use ledger_canister::{Memo, icpts::ICPTs, TransactionNotification, account_identifier::AccountIdentifier, SendArgs};
-use std::collections::HashMap;
-use std::collections::VecDeque;
+use ledger_canister::{Memo, token::Tokens, TransactionNotification, account_identifier::{AccountIdentifier, Subaccount}, SendArgs, Block, BlockHeight, BlockRes, Transfer};
+use dfn_core::api::call_with_cleanup;
+use dfn_protobuf::protobuf;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::convert::Into;
 use std::iter::FromIterator;
 use std::string::String;
@@ -69,6 +70,7 @@ impl Default for Metadata {
 
 type Balances = HashMap<Principal, Nat>;
 type Allowances = HashMap<Principal, HashMap<Principal, Nat>>;
+type UsedBlocks = HashSet<BlockHeight>;
 
 #[derive(CandidType, Debug, PartialEq)]
 pub enum TxError {
@@ -77,13 +79,16 @@ pub enum TxError {
     Unauthorized,
     LedgerTrap,
     AmountTooSmall,
+    BlockUsed,
+    ErrorOperationStyle,
+    ErrorTo,
     Other,
 }
 type TxReceipt = Result<usize, TxError>;
 
 const LEDGER_CANISTER_ID: CanisterId = CanisterId::from_u64(2);
-const THRESHOLD: ICPTs = ICPTs::from_e8s(0); // 0;
-const ICPFEE: ICPTs = ICPTs::from_e8s(10000);
+const THRESHOLD: Tokens = Tokens::from_e8s(0); // 0;
+const ICPFEE: Tokens = Tokens::from_e8s(10000);
 
 #[init]
 #[candid_method(init)]
@@ -268,24 +273,44 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
     .await
 }
 
-#[update(name = "transaction_notification")]
-#[candid_method(update, rename = "transaction_notification")]
-async fn transaction_notification(tn: TransactionNotification) -> TxReceipt {
-    let caller = ic::caller();
-    let caller_p = PrincipalId::from(caller);
-    if CanisterId::new(caller_p) != Ok(LEDGER_CANISTER_ID) {
+#[update(name = "mint")]
+#[candid_method(update, rename = "mint")]
+async fn mint(sub_account: Subaccount, block_height: BlockHeight) -> TxReceipt {
+    let blocks = ic::get_mut::<UsedBlocks>();
+    assert_eq!(blocks.insert(block_height), true);
+
+    let res: Result<BlockRes, (Option<i32>, String)> =
+        call_with_cleanup(LEDGER_CANISTER_ID, "block_pb", protobuf, block_height).await;
+    let block = res
+        .unwrap()
+        .0
+        .unwrap()
+        .unwrap()
+        .decode()
+        .expect("unable to decode block");
+    let (from, to, amount) = match block.transaction.operation {
+        Operation::Transfer{from, to, amount, fee} => {(from, to, amount)},
+        _ => {
+            blocks.remove(&block_height);
+            return Err(TxError::ErrorOperationStyle);
+        },
+    };
+
+    let user = ic::caller();
+    let user_account = AccountIdentifier::new(caller, Some(sub_account));
+
+    if user_account != from {
         return Err(TxError::Unauthorized);
     }
 
-    if tn.amount < THRESHOLD {
+    if AccountIdentifier::new(ic::id(), None) != to {
+        return Err(TxError::ErrorTo);
+    }
+
+    if amount < THRESHOLD {
         return Err(TxError::AmountTooSmall);
     }
 
-    if CanisterId::get(tn.to).0 != ic::id() {
-        return Err(TxError::Unauthorized);
-    }
-
-    let user = tn.from.0;
     let value = Nat::from(ICPTs::get_e8s(tn.amount));
 
     let user_balance = balance_of(user);
