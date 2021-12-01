@@ -278,6 +278,7 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
 async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxReceipt {
     let blocks = ic::get_mut::<UsedBlocks>();
     assert_eq!(blocks.insert(block_height), true);
+    let caller = ic::caller();
 
     let res: Result<BlockRes, (Option<i32>, String)> =
         call_with_cleanup(LEDGER_CANISTER_ID, "block_pb", protobuf, block_height).await;
@@ -296,7 +297,6 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
         },
     };
 
-    let caller = ic::caller();
     let caller_pid = PrincipalId::from(caller);
     let caller_account = AccountIdentifier::new(caller_pid, sub_account);
 

@@ -10,8 +10,14 @@
         "wasm": "ledger/ledger-canister-del-whitelist-op.wasm",
         "source": ["dist"]
       },
-      "wicp": {
+      "wicp_mo": {
         "main": "src/wicp.mo"
+      },
+      "wicp_rs": {
+        "type": "custom",
+        "candid": "rust/wicp.did",
+        "wasm": "rust/target/wasm32-unknown-unknown/release/opt.wasm",
+        "source": ["dist"]      
       }
     },
     "networks": {
