@@ -12,7 +12,7 @@ use cap_std::dip20::{Operation, TransactionStatus, TxRecord};
 use ic_kit::{ic , Principal};
 use ic_cdk_macros::*;
 use ic_types::{CanisterId, PrincipalId};
-use ledger_canister::{Memo, token::Tokens, TransactionNotification, account_identifier::{AccountIdentifier, Subaccount}, SendArgs, Block, BlockHeight, BlockRes, Transfer};
+use ledger_canister::{Memo, tokens::Tokens, account_identifier::{AccountIdentifier, Subaccount}, SendArgs, BlockHeight, BlockRes, Operation as Operate};
 use dfn_core::api::call_with_cleanup;
 use dfn_protobuf::protobuf;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -275,7 +275,7 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
 
 #[update(name = "mint")]
 #[candid_method(update, rename = "mint")]
-async fn mint(sub_account: Subaccount, block_height: BlockHeight) -> TxReceipt {
+async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxReceipt {
     let blocks = ic::get_mut::<UsedBlocks>();
     assert_eq!(blocks.insert(block_height), true);
 
@@ -289,33 +289,37 @@ async fn mint(sub_account: Subaccount, block_height: BlockHeight) -> TxReceipt {
         .decode()
         .expect("unable to decode block");
     let (from, to, amount) = match block.transaction.operation {
-        Operation::Transfer{from, to, amount, fee} => {(from, to, amount)},
+        Operate::Transfer{from, to, amount, fee: _} => {(from, to, amount)},
         _ => {
             blocks.remove(&block_height);
             return Err(TxError::ErrorOperationStyle);
         },
     };
 
-    let user = ic::caller();
-    let user_account = AccountIdentifier::new(caller, Some(sub_account));
+    let caller = ic::caller();
+    let caller_pid = PrincipalId::from(caller);
+    let caller_account = AccountIdentifier::new(caller_pid, sub_account);
 
-    if user_account != from {
+    if caller_account != from {
+        blocks.remove(&block_height);
         return Err(TxError::Unauthorized);
     }
 
-    if AccountIdentifier::new(ic::id(), None) != to {
+    if AccountIdentifier::new(PrincipalId::from(ic::id()), None) != to {
+        blocks.remove(&block_height);
         return Err(TxError::ErrorTo);
     }
 
     if amount < THRESHOLD {
+        blocks.remove(&block_height);
         return Err(TxError::AmountTooSmall);
     }
 
-    let value = Nat::from(ICPTs::get_e8s(tn.amount));
+    let value = Nat::from(Tokens::get_e8s(amount));
 
-    let user_balance = balance_of(user);
+    let user_balance = balance_of(caller);
     let balances = ic::get_mut::<Balances>();
-    balances.insert(user, user_balance + value.clone());
+    balances.insert(caller, user_balance + value.clone());
     let metadata = ic::get_mut::<Metadata>();
     metadata.total_supply += value.clone();
     metadata.history_size += 1;
@@ -323,8 +327,8 @@ async fn mint(sub_account: Subaccount, block_height: BlockHeight) -> TxReceipt {
     add_record(
         Some(caller),
         Operation::Mint,
-        user,
-        user,
+        caller,
+        caller,
         value,
         Nat::from(0),
         ic::time(),
@@ -336,7 +340,7 @@ async fn mint(sub_account: Subaccount, block_height: BlockHeight) -> TxReceipt {
 #[update(name = "withdraw")]
 #[candid_method(update, rename = "withdraw")]
 async fn withdraw(value: u64, to: String) -> TxReceipt {
-    if ICPTs::from_e8s(value) < THRESHOLD {
+    if Tokens::from_e8s(value) < THRESHOLD {
         return Err(TxError::AmountTooSmall);
     }
     let caller = ic::caller();
@@ -348,7 +352,7 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
     }
     let args = SendArgs {
         memo: Memo(0x57444857),
-        amount: (ICPTs::from_e8s(value) - ICPFEE).unwrap(),
+        amount: (Tokens::from_e8s(value) - ICPFEE).unwrap(),
         fee: ICPFEE,
         from_subaccount: None,
         to: AccountIdentifier::from_hex(&to).unwrap(),
@@ -554,12 +558,12 @@ fn main() {
 // TODO: fix upgrade functions
 #[pre_upgrade]
 fn pre_upgrade() {
-    ic::stable_store((ic::get::<Metadata>().clone(),ic::get::<Balances>(), ic::get::<Allowances>(), tx_log())).unwrap();
+    ic::stable_store((ic::get::<Metadata>().clone(),ic::get::<Balances>(), ic::get::<Allowances>(), ic::get::<UsedBlocks>(), tx_log())).unwrap();
 }
 
 #[post_upgrade]
 fn post_upgrade() {
-    let (metadata_stored, balances_stored, allowances_stored, tx_log_stored): (Metadata,Balances,Allowances,TxLog) = ic::stable_restore().unwrap();
+    let (metadata_stored, balances_stored, allowances_stored, blocks_stored, tx_log_stored): (Metadata,Balances,Allowances,UsedBlocks,TxLog) = ic::stable_restore().unwrap();
     let metadata = ic::get_mut::<Metadata>();
     *metadata = metadata_stored;
 
@@ -568,6 +572,9 @@ fn post_upgrade() {
 
     let allowances = ic::get_mut::<Allowances>();
     *allowances = allowances_stored;
+
+    let blocks = ic::get_mut::<UsedBlocks>();
+    *blocks = blocks_stored;
 
     let tx_log = tx_log();
     *tx_log = tx_log_stored;

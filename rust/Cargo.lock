@@ -537,9 +537,9 @@ dependencies = [
 
 [[package]]
 name = "crc32fast"
-version = "1.2.2"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3825b1e8580894917dc4468cb634a1b4e9745fddc854edad72d9c04644c0319f"
+checksum = "738c290dfaea84fc1ca15ad9c168d083b05a714e1efddd8edaab678dc28d2836"
 dependencies = [
  "cfg-if 1.0.0",
 ]
@@ -651,7 +651,7 @@ dependencies = [
 [[package]]
 name = "dfn_candid"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "candid",
  "dfn_core",
@@ -664,7 +664,7 @@ dependencies = [
 [[package]]
 name = "dfn_core"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "byteorder",
  "cfg-if 0.1.10",
@@ -678,7 +678,7 @@ dependencies = [
 [[package]]
 name = "dfn_http"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "candid",
  "dfn_candid",
@@ -691,7 +691,7 @@ dependencies = [
 [[package]]
 name = "dfn_protobuf"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "dfn_core",
  "ic-base-types",
@@ -1058,7 +1058,7 @@ dependencies = [
 [[package]]
 name = "ic-base-types"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "base32",
  "byte-unit",
@@ -1117,7 +1117,7 @@ dependencies = [
 [[package]]
 name = "ic-crypto-internal-sha2"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "openssl",
  "sha2",
@@ -1126,7 +1126,7 @@ dependencies = [
 [[package]]
 name = "ic-crypto-internal-types"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "arrayvec",
  "base64",
@@ -1144,7 +1144,7 @@ dependencies = [
 [[package]]
 name = "ic-crypto-sha"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "ic-crypto-internal-sha2",
 ]
@@ -1152,7 +1152,7 @@ dependencies = [
 [[package]]
 name = "ic-crypto-tree-hash"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "ic-crypto-internal-types",
  "ic-crypto-sha",
@@ -1164,7 +1164,7 @@ dependencies = [
 [[package]]
 name = "ic-error-types"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "candid",
  "ic-cdk",
@@ -1177,7 +1177,7 @@ dependencies = [
 [[package]]
 name = "ic-ic00-types"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "candid",
  "ic-base-types",
@@ -1209,7 +1209,7 @@ dependencies = [
 [[package]]
 name = "ic-nns-constants"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "ed25519-dalek",
  "ic-base-types",
@@ -1222,7 +1222,7 @@ dependencies = [
 [[package]]
 name = "ic-protobuf"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "bincode",
  "candid",
@@ -1239,7 +1239,7 @@ dependencies = [
 [[package]]
 name = "ic-registry-transport"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "bytes",
  "candid",
@@ -1269,7 +1269,7 @@ dependencies = [
 [[package]]
 name = "ic-types"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "base32",
  "base64",
@@ -1309,7 +1309,7 @@ dependencies = [
 [[package]]
 name = "ic-utils"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "bitflags",
  "cvt",
@@ -1444,7 +1444,7 @@ checksum = "884e2677b40cc8c339eaefcb701c32ef1fd2493d71118dc0ca4b6a736c93bd67"
 [[package]]
 name = "ledger-canister"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "byteorder",
  "candid",
@@ -1619,7 +1619,7 @@ dependencies = [
 [[package]]
 name = "on_wire"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 
 [[package]]
 name = "once_cell"
@@ -1735,7 +1735,7 @@ dependencies = [
 [[package]]
 name = "phantom_newtype"
 version = "0.8.0"
-source = "git+https://github.com/flyq/ic#b2c58b5f0c15b581b7a8f92f05ca32d479423272"
+source = "git+https://github.com/flyq/ic#f993287d60ea0b5b54d18ea5ec3402a7efcceb19"
 dependencies = [
  "candid",
  "ic-cdk",

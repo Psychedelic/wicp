@@ -1,4 +1,3 @@
-type ICPTs = record { e8s : nat64 };
 type Metadata = record {
   fee : nat;
   deploy_time : nat64;
@@ -17,21 +16,15 @@ type TokenInfo = record {
   metadata : Metadata;
   cycles : nat64;
 };
-type TransactionNotification = record {
-  to : principal;
-  to_subaccount : opt vec nat8;
-  from : principal;
-  memo : nat64;
-  from_subaccount : opt vec nat8;
-  amount : ICPTs;
-  block_height : nat64;
-};
 type TxError = variant {
   InsufficientAllowance;
   InsufficientBalance;
+  ErrorOperationStyle;
   Unauthorized;
   LedgerTrap;
+  ErrorTo;
   Other;
+  BlockUsed;
   AmountTooSmall;
 };
 service : (text, text, text, nat8, principal, nat, principal, principal) -> {
@@ -46,6 +39,7 @@ service : (text, text, text, nat8, principal, nat, principal, principal) -> {
   getTokenInfo : () -> (TokenInfo) query;
   getUserApprovals : (principal) -> (vec record { principal; nat }) query;
   historySize : () -> (nat64) query;
+  mint : (opt vec nat8, nat64) -> (Result);
   name : () -> (text) query;
   owner : () -> (principal) query;
   setFee : (nat) -> ();
@@ -54,7 +48,6 @@ service : (text, text, text, nat8, principal, nat, principal, principal) -> {
   setOwner : (principal) -> ();
   symbol : () -> (text) query;
   totalSupply : () -> (nat) query;
-  transaction_notification : (TransactionNotification) -> (Result);
   transfer : (principal, nat) -> (Result);
   transferFrom : (principal, principal, nat) -> (Result);
   withdraw : (nat64, text) -> (Result);
