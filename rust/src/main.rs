@@ -84,7 +84,7 @@ pub enum TxError {
     ErrorTo,
     Other,
 }
-type TxReceipt = Result<usize, TxError>;
+type TxReceipt = Result<Nat, TxError>;
 
 const LEDGER_CANISTER_ID: CanisterId = CanisterId::from_u64(2);
 const THRESHOLD: Tokens = Tokens::from_e8s(0); // 0;
@@ -614,7 +614,7 @@ pub async fn insert_into_cap(ie: IndefiniteEvent) -> TxReceipt {
 async fn insert_into_cap_priv(ie: IndefiniteEvent) -> TxReceipt {
     let insert_res = insert(ie.clone())
         .await
-        .map(|tx_id| tx_id as usize)
+        .map(|tx_id| Nat::from(tx_id))
         .map_err(|_| TxError::Other);
 
     if insert_res.is_err() {
