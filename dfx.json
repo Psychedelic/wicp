@@ -16,7 +16,7 @@
       "wicp_rs": {
         "type": "custom",
         "candid": "rust/wicp.did",
-        "wasm": "rust/target/wasm32-unknown-unknown/release/opt.wasm",
+        "wasm": "target/wasm32-unknown-unknown/release/opt.wasm",
         "source": ["dist"]      
       }
     },

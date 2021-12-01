@@ -238,7 +238,7 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
     match allowances.get(&owner) {
         Some(inner) => {
             let mut temp = inner.clone();
-            if v.clone() != 0 {
+            if v != 0 {
                 temp.insert(spender, v.clone());
                 allowances.insert(owner, temp);
             } else {
@@ -251,7 +251,7 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
             }
         }
         None => {
-            if v.clone() != 0 {
+            if v != 0 {
                 let mut inner = HashMap::new();
                 inner.insert(spender, v.clone());
                 let allowances = ic::get_mut::<Allowances>();
@@ -431,13 +431,7 @@ fn balance_of(id: Principal) -> Nat {
 #[candid_method(query)]
 fn allowance(owner: Principal, spender: Principal) -> Nat {
     let allowances = ic::get::<Allowances>();
-    match allowances.get(&owner) {
-        Some(inner) => match inner.get(&spender) {
-            Some(value) => value.clone(),
-            None => Nat::from(0),
-        },
-        None => Nat::from(0),
-    }
+    allowances.get(&owner).unwrap_or(&HashMap::new()).get(&spender).unwrap_or(&Nat::from(0)).clone()
 }
 
 #[query(name = "getLogo")]
