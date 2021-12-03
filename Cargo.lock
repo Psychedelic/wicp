@@ -385,7 +385,7 @@ dependencies = [
 [[package]]
 name = "cap-common"
 version = "0.1.0"
-source = "git+https://github.com/flyq/cap.git?branch=sdk-fix#b4810ce9819152e353e5ea38289f9a8ca4d7c366"
+source = "git+https://github.com/Psychedelic/cap.git?branch=main#85d135eb43433adef9b6681260ce64eaa5dbe48c"
 dependencies = [
  "async-std",
  "ic-cdk",
@@ -400,7 +400,7 @@ dependencies = [
 [[package]]
 name = "cap-sdk"
 version = "0.1.0-alpha1"
-source = "git+https://github.com/flyq/cap.git?branch=sdk-fix#b4810ce9819152e353e5ea38289f9a8ca4d7c366"
+source = "git+https://github.com/Psychedelic/cap.git?branch=main#85d135eb43433adef9b6681260ce64eaa5dbe48c"
 dependencies = [
  "async-stream",
  "cap-sdk-core",
@@ -415,7 +415,7 @@ dependencies = [
 [[package]]
 name = "cap-sdk-core"
 version = "0.1.0-alpha1"
-source = "git+https://github.com/flyq/cap.git?branch=sdk-fix#b4810ce9819152e353e5ea38289f9a8ca4d7c366"
+source = "git+https://github.com/Psychedelic/cap.git?branch=main#85d135eb43433adef9b6681260ce64eaa5dbe48c"
 dependencies = [
  "cap-common",
  "ic-cdk",
@@ -427,7 +427,7 @@ dependencies = [
 [[package]]
 name = "cap-standards"
 version = "0.1.0-alpha1"
-source = "git+https://github.com/flyq/cap.git?branch=sdk-fix#b4810ce9819152e353e5ea38289f9a8ca4d7c366"
+source = "git+https://github.com/Psychedelic/cap.git?branch=main#85d135eb43433adef9b6681260ce64eaa5dbe48c"
 dependencies = [
  "bincode",
  "candid",
@@ -1360,9 +1360,9 @@ dependencies = [
 
 [[package]]
 name = "intmap"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e50930385956f6c4a0b99f3dd654adcc40788456c36e17c5b20e1d1ceb523ec6"
+checksum = "ae52f28f45ac2bc96edb7714de995cffc174a395fb0abf5bff453587c980d7b9"
 
 [[package]]
 name = "itertools"

@@ -16,8 +16,8 @@ ledger-canister = { git="https://github.com/flyq/ic" }
 dfn_core = { git="https://github.com/flyq/ic" }
 dfn_protobuf = { git="https://github.com/flyq/ic" }
 ic-types = { git="https://github.com/flyq/ic" }
-cap-std = { git = "https://github.com/flyq/cap", branch = "sdk-fix", package="cap-standards", features = ["alpha-dip20", "cap-sdk", "sdk-impls"] }
-cap-sdk = { git = "https://github.com/flyq/cap.git", branch = "sdk-fix" }
+cap-std = { git = "https://github.com/Psychedelic/cap", branch = "main", package="cap-standards", features = ["alpha-dip20", "cap-sdk", "sdk-impls"] }
+cap-sdk = { git = "https://github.com/Psychedelic/cap.git", branch = "main" }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 async-std = { version="1.10.0", features = ["attributes"] }
