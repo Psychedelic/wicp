@@ -166,7 +166,7 @@ async fn transfer(to: Principal, value: Nat) -> TxReceipt {
     metadata.history_size += 1;
 
     add_record(
-        None,
+        Some(from),
         Operation::Transfer,
         from,
         to,
@@ -265,7 +265,7 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
     }
     metadata.history_size += 1;
     add_record(
-        None,
+        Some(owner),
         Operation::Approve,
         owner,
         spender,
