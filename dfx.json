@@ -2,7 +2,7 @@
     "canisters": {
       "wicp": {
         "type": "custom",
-        "candid": "rust/wicp.did",
+        "candid": "src/wicp.did",
         "wasm": "target/wasm32-unknown-unknown/release/opt.wasm",
         "source": ["dist"]      
       }
