@@ -33,6 +33,7 @@ pub fn tx_log<'a>() -> &'a mut TxLog {
     ic_kit::ic::get_mut::<TxLog>()
 }
 
+#[allow(non_snake_case)]
 #[derive(Deserialize, CandidType, Clone, Debug)]
 struct Metadata {
     logo: String,
@@ -58,6 +59,7 @@ struct StatsData {
     deploy_time: u64,
 }
 
+#[allow(non_snake_case)]
 #[derive(Deserialize, CandidType, Clone, Debug)]
 struct TokenInfo {
     metadata: Metadata,
@@ -102,7 +104,13 @@ pub enum TxError {
     ErrorTo,
     Other,
 }
-type TxReceipt = Result<Nat, TxError>;
+
+#[allow(non_camel_case_types)]
+#[derive(CandidType)]
+pub enum TxReceipt {
+    ok(Nat),
+    err(TxError),
+}
 
 const LEDGER_CANISTER_ID: CanisterId = CanisterId::from_u64(2);
 const THRESHOLD: Tokens = Tokens::from_e8s(0); // 0;
@@ -173,7 +181,7 @@ async fn transfer(to: Principal, value: Nat) -> TxReceipt {
     let from = ic::caller();
     let stats = ic::get_mut::<StatsData>();
     if balance_of(from) < value.clone() + stats.fee.clone() {
-        return Err(TxError::InsufficientBalance);
+        return TxReceipt::err(TxError::InsufficientBalance);
     }
     _charge_fee(from, stats.fee_to, stats.fee.clone());
     _transfer(from, to, value.clone());
@@ -199,11 +207,11 @@ async fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt 
     let from_allowance = allowance(from, owner);
     let stats = ic::get_mut::<StatsData>();
     if from_allowance < value.clone() + stats.fee.clone() {
-        return Err(TxError::InsufficientAllowance);
+        return TxReceipt::err(TxError::InsufficientAllowance);
     }
     let from_balance = balance_of(from);
     if from_balance < value.clone() + stats.fee.clone() {
-        return Err(TxError::InsufficientBalance);
+        return TxReceipt::err(TxError::InsufficientBalance);
     }
     _charge_fee(from, stats.fee_to, stats.fee.clone());
     _transfer(from, to, value.clone());
@@ -248,7 +256,7 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
     let owner = ic::caller();
     let stats = ic::get_mut::<StatsData>();
     if balance_of(owner) < stats.fee.clone() {
-        return Err(TxError::InsufficientBalance);
+        return TxReceipt::err(TxError::InsufficientBalance);
     }
     _charge_fee(owner, stats.fee_to, stats.fee.clone());
     let v = value.clone() + stats.fee.clone();
@@ -316,7 +324,7 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
         } => (from, to, amount),
         _ => {
             blocks.remove(&block_height);
-            return Err(TxError::ErrorOperationStyle);
+            return TxReceipt::err(TxError::ErrorOperationStyle);
         }
     };
 
@@ -325,17 +333,17 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
 
     if caller_account != from {
         blocks.remove(&block_height);
-        return Err(TxError::Unauthorized);
+        return TxReceipt::err(TxError::Unauthorized);
     }
 
     if AccountIdentifier::new(PrincipalId::from(ic::id()), None) != to {
         blocks.remove(&block_height);
-        return Err(TxError::ErrorTo);
+        return TxReceipt::err(TxError::ErrorTo);
     }
 
     if amount < THRESHOLD {
         blocks.remove(&block_height);
-        return Err(TxError::AmountTooSmall);
+        return TxReceipt::err(TxError::AmountTooSmall);
     }
 
     let value = Nat::from(Tokens::get_e8s(amount));
@@ -364,14 +372,14 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
 #[candid_method(update, rename = "withdraw")]
 async fn withdraw(value: u64, to: String) -> TxReceipt {
     if Tokens::from_e8s(value) < THRESHOLD {
-        return Err(TxError::AmountTooSmall);
+        return TxReceipt::err(TxError::AmountTooSmall);
     }
     let caller = ic::caller();
     let caller_balance = balance_of(caller);
     let value_nat = Nat::from(value);
     let stats = ic::get_mut::<StatsData>();
     if caller_balance.clone() < value_nat.clone() || stats.total_supply < value_nat.clone() {
-        return Err(TxError::InsufficientBalance);
+        return TxReceipt::err(TxError::InsufficientBalance);
     }
     let args = SendArgs {
         memo: Memo(0x57444857),
@@ -408,7 +416,7 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
         Err(_) => {
             balances.insert(caller, caller_balance);
             stats.total_supply += value_nat;
-            return Err(TxError::LedgerTrap);
+            return TxReceipt::err(TxError::LedgerTrap);
         }
     }
 }
@@ -677,7 +685,10 @@ async fn insert_into_cap_priv(ie: IndefiniteEvent) -> TxReceipt {
         tx_log().ie_records.push_back(ie.clone());
     }
 
-    insert_res
+    match insert_res {
+        Ok(r) => return TxReceipt::ok(r),
+        Err(e) => return TxReceipt::err(e),
+    }
 }
 
 #[cfg(test)]
