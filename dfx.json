@@ -1,19 +1,6 @@
 {
     "canisters": {
-      "1registry": {
-      },
-      "2governance": {      
-      },      
-      "3ledger": {
-        "type": "custom",
-        "candid": "ledger/ledger.did",
-        "wasm": "ledger/ledger-canister-del-whitelist-op.wasm",
-        "source": ["dist"]
-      },
-      "wicp_mo": {
-        "main": "src/wicp.mo"
-      },
-      "wicp_rs": {
+      "wicp": {
         "type": "custom",
         "candid": "rust/wicp.did",
         "wasm": "target/wasm32-unknown-unknown/release/opt.wasm",
@@ -27,4 +14,4 @@
       }
     },
     "version": 1
-  }
+}

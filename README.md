@@ -7,11 +7,5 @@ Wrapped ICP (WICP) is a wrapped version of the IC's native token, ICP. Each WICP
 - [Wrapped ICP Website](https://dank.ooo/wicp/) 
 - [Using WICP Guide](https://docs.dank.ooo/wicp/getting-started/)
 
-**Repository Structure:**
-
-1. src: WICP motoko source code
-2. market: WICP -> ICP market
-3. ledger: ledger wasm, for local test
-4. rust: WICP rust soruce code
-
 ---
+
