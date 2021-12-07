@@ -107,7 +107,7 @@ dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai a
 Returns the logo of Wrapped ICP (WICP).
 
 ```bash
-dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai logo
+dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai getLogo
 ```
 
 ---
