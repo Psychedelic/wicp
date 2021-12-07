@@ -3,8 +3,12 @@
       "wicp": {
         "type": "custom",
         "candid": "src/wicp.did",
-        "wasm": "target/wasm32-unknown-unknown/release/opt.wasm",
-        "source": ["dist"]      
+        "wasm": "target/wasm32-unknown-unknown/release/opt.wasm"
+      },
+      "wicp_test": {
+         "type": "custom",
+         "candid": "src/wicp.did",
+         "wasm": "target/wasm32-unknown-unknown/release/opt.wasm"
       }
     },
     "networks": {
