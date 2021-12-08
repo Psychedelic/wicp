@@ -27,7 +27,7 @@ type TxError = variant {
   AmountTooSmall;
 };
 type TxReceipt = variant { ok : nat; err : TxError };
-service : (text, text, text, nat8, principal, nat, principal, principal) -> {
+service : (text, text, text, nat8, nat, principal, nat, principal, principal) -> {
   allowance : (principal, principal) -> (nat) query;
   approve : (principal, nat) -> (TxReceipt);
   balanceOf : (principal) -> (nat) query;
