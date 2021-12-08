@@ -45,6 +45,20 @@ struct Metadata {
     fee: Nat,
 }
 
+impl Default for Metadata {
+    fn default() -> Self {
+        Self {
+            logo: "".to_string(),
+            name: "".to_string(),
+            symbol: "".to_string(),
+            decimals: 0,
+            totalSupply: Nat::from(0),
+            owner: Principal::anonymous(),
+            fee: Nat::from(0),
+        }
+    }
+}
+
 #[derive(Deserialize, CandidType, Clone, Debug)]
 struct StatsData {
     logo: String,
@@ -491,6 +505,14 @@ fn get_logo() -> String {
 fn name() -> String {
     let stats = ic::get::<StatsData>();
     stats.name.clone()
+}
+
+#[update(name = "setName")]
+#[candid_method(update, rename = "setName")]
+fn set_name(name: String) {
+    let stats = ic::get_mut::<StatsData>();
+    assert_eq!(ic::caller(), stats.owner);
+    stats.name = name;
 }
 
 #[query(name = "symbol")]

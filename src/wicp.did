@@ -41,6 +41,7 @@ service : (text, text, text, nat8, nat, principal, nat, principal, principal) ->
   historySize : () -> (nat64) query;
   mint : (opt vec nat8, nat64) -> (TxReceipt);
   name : () -> (text) query;
+  setName : (text) -> ();
   owner : () -> (principal) query;
   setFee : (nat) -> ();
   setFeeTo : (principal) -> ();
