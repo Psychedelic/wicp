@@ -123,6 +123,7 @@ fn init(
     name: String,
     symbol: String,
     decimals: u8,
+    initial_supply: Nat,
     owner: Principal,
     fee: Nat,
     fee_to: Principal,
@@ -133,20 +134,23 @@ fn init(
     stats.name = name;
     stats.symbol = symbol;
     stats.decimals = decimals;
-    stats.total_supply = Nat::from(0);
+    stats.total_supply = initial_supply.clone();
     stats.owner = owner;
-    stats.fee = fee;
+    stats.fee = fee.clone();
     stats.fee_to = fee_to;
     stats.history_size = 1;
     stats.deploy_time = ic::time();
     handshake(1_000_000_000_000, Some(cap));
+    let balances = ic::get_mut::<Balances>();
+    balances.insert(owner, initial_supply.clone());
+
     let _ = add_record(
         Some(owner),
         Operation::Mint,
         Principal::from_text("aaaaa-aa").unwrap(),
         owner,
-        Nat::from(0),
-        Nat::from(0),
+        initial_supply,
+        fee,
         ic::time(),
         TransactionStatus::Succeeded,
     );
@@ -544,7 +548,7 @@ fn history_size() -> usize {
 fn get_token_info() -> TokenInfo {
     let stats = ic::get::<StatsData>().clone();
     let balance = ic::get::<Balances>();
-    
+
     return TokenInfo {
         metadata: get_metadata(),
         feeTo: stats.fee_to,
@@ -808,10 +812,7 @@ mod tests {
             stats.decimals, 2,
             "stats.decimals did not return the correct value"
         );
-        assert_eq!(
-            stats.fee, 1,
-            "stats.fee did not return the correct value"
-        );
+        assert_eq!(stats.fee, 1, "stats.fee did not return the correct value");
         assert_eq!(
             stats.fee_to,
             Principal::anonymous(),
