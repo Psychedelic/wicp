@@ -26,7 +26,7 @@ type TxError = variant {
   BlockUsed;
   AmountTooSmall;
 };
-type TxReceipt = variant { ok : nat; err : TxError };
+type TxReceipt = variant { Ok : nat; Err : TxError };
 service : (text, text, text, nat8, nat, principal, nat, principal, principal) -> {
   allowance : (principal, principal) -> (nat) query;
   approve : (principal, nat) -> (TxReceipt);
