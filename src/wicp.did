@@ -54,6 +54,7 @@ service : (
   owner : () -> (principal) query;
   setFee : (nat) -> ();
   setFeeTo : (principal) -> ();
+  setGenesis : () -> (TxReceipt);
   setLogo : (text) -> ();
   setName : (text) -> ();
   setOwner : (principal) -> ();

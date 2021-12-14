@@ -71,6 +71,17 @@ struct TokenInfo {
     cycles: u64,
 }
 
+struct Genesis {
+    caller: Option<Principal>, 
+    op: Operation, 
+    from: Principal, 
+    to: Principal,
+    amount: Nat,
+    fee: Nat,
+    timestamp: u64,
+    status: TransactionStatus,
+}
+
 impl Default for StatsData {
     fn default() -> Self {
         StatsData {
@@ -84,6 +95,21 @@ impl Default for StatsData {
             fee_to: Principal::anonymous(),
             history_size: 0,
             deploy_time: 0,
+        }
+    }
+}
+
+impl Default for Genesis {
+    fn default() -> Self {
+        Genesis {
+            caller: None,
+            op: Operation::Mint,
+            from: Principal::anonymous(),
+            to: Principal::anonymous(),
+            amount: Nat::from(0),
+            fee: Nat::from(0),
+            timestamp: 0,
+            status: TransactionStatus::Succeeded,
         }
     }
 }
@@ -118,7 +144,7 @@ const ICPFEE: Tokens = Tokens::from_e8s(10000);
 
 #[init]
 #[candid_method(init)]
-async fn init(
+fn init(
     logo: String,
     name: String,
     symbol: String,
@@ -143,18 +169,15 @@ async fn init(
     handshake(1_000_000_000_000, Some(cap));
     let balances = ic::get_mut::<Balances>();
     balances.insert(owner, initial_supply.clone());
-
-    let _ = add_record(
-        Some(owner),
-        Operation::Mint,
-        Principal::from_text("aaaaa-aa").unwrap(),
-        owner,
-        initial_supply,
-        fee,
-        ic::time(),
-        TransactionStatus::Succeeded,
-    )
-    .await;
+    let genesis = ic::get_mut::<Genesis>();
+    genesis.caller = Some(owner);
+    genesis.op = Operation::Mint;
+    genesis.from = Principal::from_text("aaaaa-aa").unwrap();
+    genesis.to = owner;
+    genesis.amount = initial_supply;
+    genesis.fee = fee;
+    genesis.timestamp = ic::time();
+    genesis.status = TransactionStatus::Succeeded;
 }
 
 fn _transfer(from: Principal, to: Principal, value: Nat) {
@@ -456,6 +479,25 @@ fn set_owner(owner: Principal) {
     let stats = ic::get_mut::<StatsData>();
     assert_eq!(ic::caller(), stats.owner);
     stats.owner = owner;
+}
+
+#[update(name = "setGenesis")]
+#[candid_method(update, rename = "setGenesis")]
+async fn set_genesis() -> TxReceipt {
+    let stats = ic::get_mut::<StatsData>();
+    assert_eq!(ic::caller(), stats.owner);
+    let genesis = ic::get::<Genesis>();
+    add_record(
+        genesis.caller,
+        genesis.op,
+        genesis.from,
+        genesis.to,
+        genesis.amount.clone(),
+        genesis.fee.clone(),
+        genesis.timestamp,
+        genesis.status,
+    )
+    .await
 }
 
 #[query(name = "balanceOf")]
