@@ -118,7 +118,7 @@ const ICPFEE: Tokens = Tokens::from_e8s(10000);
 
 #[init]
 #[candid_method(init)]
-fn init(
+async fn init(
     logo: String,
     name: String,
     symbol: String,
@@ -153,7 +153,8 @@ fn init(
         fee,
         ic::time(),
         TransactionStatus::Succeeded,
-    );
+    )
+    .await;
 }
 
 fn _transfer(from: Principal, to: Principal, value: Nat) {

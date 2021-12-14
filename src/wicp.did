@@ -27,7 +27,17 @@ type TxError = variant {
   AmountTooSmall;
 };
 type TxReceipt = variant { Ok : nat; Err : TxError };
-service : (text, text, text, nat8, nat, principal, nat, principal, principal) -> {
+service : (
+  text,
+  text,
+  text,
+  nat8,
+  nat,
+  principal,
+  nat,
+  principal,
+  principal,
+) -> {
   allowance : (principal, principal) -> (nat) query;
   approve : (principal, nat) -> (TxReceipt);
   balanceOf : (principal) -> (nat) query;
@@ -41,11 +51,11 @@ service : (text, text, text, nat8, nat, principal, nat, principal, principal) ->
   historySize : () -> (nat64) query;
   mint : (opt vec nat8, nat64) -> (TxReceipt);
   name : () -> (text) query;
-  setName : (text) -> ();
   owner : () -> (principal) query;
   setFee : (nat) -> ();
   setFeeTo : (principal) -> ();
   setLogo : (text) -> ();
+  setName : (text) -> ();
   setOwner : (principal) -> ();
   symbol : () -> (text) query;
   totalSupply : () -> (nat) query;
