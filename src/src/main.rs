@@ -330,19 +330,30 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
 #[update(name = "mint")]
 #[candid_method(update, rename = "mint")]
 async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxReceipt {
-    let blocks = ic::get_mut::<UsedBlocks>();
-    assert_eq!(blocks.insert(block_height), true);
     let caller = ic::caller();
 
-    let res: Result<BlockRes, (Option<i32>, String)> =
+    let response: Result<BlockRes, (Option<i32>, String)> =
         call_with_cleanup(LEDGER_CANISTER_ID, "block_pb", protobuf, block_height).await;
-    let block = res
-        .unwrap()
-        .0
-        .unwrap()
-        .unwrap()
-        .decode()
-        .expect("unable to decode block");
+    let encode_block = match response {
+        Ok(BlockRes(res)) => {
+            match res {
+                Some(result_encode_block) => {
+                    match result_encode_block {
+                        Ok(encode_block) => encode_block,
+                        Err(_) => return TxReceipt::Err(TxError::Other),
+                    }
+                },
+                None => return TxReceipt::Err(TxError::Other),
+            }
+        },
+        Err(_) => return TxReceipt::Err(TxError::Other),
+    };
+
+    let block = match encode_block.decode() {
+        Ok(block) => block,
+        Err(_) => return TxReceipt::Err(TxError::Other),
+    };
+
     let (from, to, amount) = match block.transaction.operation {
         Operate::Transfer {
             from,
@@ -351,10 +362,12 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
             fee: _,
         } => (from, to, amount),
         _ => {
-            blocks.remove(&block_height);
             return TxReceipt::Err(TxError::ErrorOperationStyle);
         }
     };
+
+    let blocks = ic::get_mut::<UsedBlocks>();
+    assert_eq!(blocks.insert(block_height), true);
 
     let caller_pid = PrincipalId::from(caller);
     let caller_account = AccountIdentifier::new(caller_pid, sub_account);
@@ -645,6 +658,18 @@ fn get_user_approvals(who: Principal) -> Vec<(Principal, Nat)> {
         Some(allow) => return Vec::from_iter(allow.clone().into_iter()),
         None => return Vec::new(),
     }
+}
+
+#[query(name = "getBlockUsed")]
+#[candid_method(query, rename = "getBlockUsed")]
+fn get_block_used() -> HashSet<u64> {
+    ic::get::<UsedBlocks>().clone()
+}
+
+#[query(name = "isBlockUsed")]
+#[candid_method(query, rename = "isBlockUsed")]
+fn is_block_used(block_number: BlockHeight) -> bool {
+    ic::get::<UsedBlocks>().contains(&block_number)
 }
 
 #[cfg(any(target_arch = "wasm32", test))]
