@@ -131,12 +131,7 @@ pub enum TxError {
     Other,
 }
 
-#[allow(non_camel_case_types)]
-#[derive(CandidType)]
-pub enum TxReceipt {
-    Ok(Nat),
-    Err(TxError),
-}
+type TxReceipt = Result<Nat, TxError>;
 
 const LEDGER_CANISTER_ID: CanisterId = CanisterId::from_u64(2);
 const THRESHOLD: Tokens = Tokens::from_e8s(0); // 0;
@@ -209,7 +204,7 @@ async fn transfer(to: Principal, value: Nat) -> TxReceipt {
     let from = ic::caller();
     let stats = ic::get_mut::<StatsData>();
     if balance_of(from) < value.clone() + stats.fee.clone() {
-        return TxReceipt::Err(TxError::InsufficientBalance);
+        return Err(TxError::InsufficientBalance);
     }
     _charge_fee(from, stats.fee_to, stats.fee.clone());
     _transfer(from, to, value.clone());
@@ -235,11 +230,11 @@ async fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt 
     let from_allowance = allowance(from, owner);
     let stats = ic::get_mut::<StatsData>();
     if from_allowance < value.clone() + stats.fee.clone() {
-        return TxReceipt::Err(TxError::InsufficientAllowance);
+        return Err(TxError::InsufficientAllowance);
     }
     let from_balance = balance_of(from);
     if from_balance < value.clone() + stats.fee.clone() {
-        return TxReceipt::Err(TxError::InsufficientBalance);
+        return Err(TxError::InsufficientBalance);
     }
     _charge_fee(from, stats.fee_to, stats.fee.clone());
     _transfer(from, to, value.clone());
@@ -284,7 +279,7 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
     let owner = ic::caller();
     let stats = ic::get_mut::<StatsData>();
     if balance_of(owner) < stats.fee.clone() {
-        return TxReceipt::Err(TxError::InsufficientBalance);
+        return Err(TxError::InsufficientBalance);
     }
     _charge_fee(owner, stats.fee_to, stats.fee.clone());
     let v = value.clone() + stats.fee.clone();
@@ -340,18 +335,43 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
                 Some(result_encode_block) => {
                     match result_encode_block {
                         Ok(encode_block) => encode_block,
-                        Err(_) => return TxReceipt::Err(TxError::Other),
+                        Err(e) => {
+                            let storage = match Principal::from_text(e.to_string()) {
+                                Ok(p) => p,
+                                Err(_) => return Err(TxError::Other),
+                            };
+                            let storage_canister = match CanisterId::new(PrincipalId::from(storage)) {
+                                Ok(c) => c,
+                                Err(_) => return Err(TxError::Other),
+                            };
+                            let response: Result<BlockRes, (Option<i32>, String)> =
+                                call_with_cleanup(storage_canister, "get_block_pb", protobuf, block_height).await;
+                            match response {
+                                Ok(BlockRes(res)) => {
+                                    match res {
+                                        Some(result_encode_block) => {
+                                            match result_encode_block {
+                                                Ok(encode_block) => encode_block,
+                                                Err(_) => return Err(TxError::Other),
+                                            }
+                                        },
+                                        None => return Err(TxError::Other),
+                                    }
+                                },
+                                Err(_) => return Err(TxError::Other),
+                            }
+                        }
                     }
                 },
-                None => return TxReceipt::Err(TxError::Other),
+                None => return Err(TxError::Other),
             }
         },
-        Err(_) => return TxReceipt::Err(TxError::Other),
+        Err(_) => return Err(TxError::Other),
     };
 
     let block = match encode_block.decode() {
         Ok(block) => block,
-        Err(_) => return TxReceipt::Err(TxError::Other),
+        Err(_) => return Err(TxError::Other),
     };
 
     let (from, to, amount) = match block.transaction.operation {
@@ -362,7 +382,7 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
             fee: _,
         } => (from, to, amount),
         _ => {
-            return TxReceipt::Err(TxError::ErrorOperationStyle);
+            return Err(TxError::ErrorOperationStyle);
         }
     };
 
@@ -374,17 +394,17 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
 
     if caller_account != from {
         blocks.remove(&block_height);
-        return TxReceipt::Err(TxError::Unauthorized);
+        return Err(TxError::Unauthorized);
     }
 
     if AccountIdentifier::new(PrincipalId::from(ic::id()), None) != to {
         blocks.remove(&block_height);
-        return TxReceipt::Err(TxError::ErrorTo);
+        return Err(TxError::ErrorTo);
     }
 
     if amount < THRESHOLD {
         blocks.remove(&block_height);
-        return TxReceipt::Err(TxError::AmountTooSmall);
+        return Err(TxError::AmountTooSmall);
     }
 
     let value = Nat::from(Tokens::get_e8s(amount));
@@ -413,14 +433,14 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
 #[candid_method(update, rename = "withdraw")]
 async fn withdraw(value: u64, to: String) -> TxReceipt {
     if Tokens::from_e8s(value) < THRESHOLD {
-        return TxReceipt::Err(TxError::AmountTooSmall);
+        return Err(TxError::AmountTooSmall);
     }
     let caller = ic::caller();
     let caller_balance = balance_of(caller);
     let value_nat = Nat::from(value);
     let stats = ic::get_mut::<StatsData>();
     if caller_balance.clone() < value_nat.clone() || stats.total_supply < value_nat.clone() {
-        return TxReceipt::Err(TxError::InsufficientBalance);
+        return Err(TxError::InsufficientBalance);
     }
     let args = SendArgs {
         memo: Memo(0x57444857),
@@ -457,7 +477,7 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
         Err(_) => {
             balances.insert(caller, caller_balance);
             stats.total_supply += value_nat;
-            return TxReceipt::Err(TxError::LedgerTrap);
+            return Err(TxError::LedgerTrap);
         }
     }
 }
@@ -765,10 +785,7 @@ async fn insert_into_cap_priv(ie: IndefiniteEvent) -> TxReceipt {
         tx_log().ie_records.push_back(ie.clone());
     }
 
-    match insert_res {
-        Ok(r) => return TxReceipt::Ok(r),
-        Err(e) => return TxReceipt::Err(e),
-    }
+    insert_res
 }
 
 #[cfg(test)]
