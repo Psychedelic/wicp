@@ -6,7 +6,7 @@
 * Stability  : Experimental
 */
 use candid::{candid_method, CandidType, Deserialize, Int, Nat};
-use cap_sdk::{handshake, insert, Event, IndefiniteEvent, TypedEvent};
+use cap_sdk::{CapEnv, handshake, insert, Event, IndefiniteEvent, TypedEvent};
 use cap_std::dip20::cap::DIP20Details;
 use cap_std::dip20::{Operation, TransactionStatus, TxRecord};
 use dfn_core::api::call_with_cleanup;
@@ -72,9 +72,9 @@ struct TokenInfo {
 }
 
 struct Genesis {
-    caller: Option<Principal>, 
-    op: Operation, 
-    from: Principal, 
+    caller: Option<Principal>,
+    op: Operation,
+    from: Principal,
     to: Principal,
     amount: Nat,
     fee: Nat,
@@ -710,18 +710,20 @@ fn pre_upgrade() {
         ic::get::<Allowances>(),
         ic::get::<UsedBlocks>(),
         tx_log(),
+        CapEnv::to_archive()
     ))
     .unwrap();
 }
 
 #[post_upgrade]
 fn post_upgrade() {
-    let (metadata_stored, balances_stored, allowances_stored, blocks_stored, tx_log_stored): (
+    let (metadata_stored, balances_stored, allowances_stored, blocks_stored, tx_log_stored, cap_env): (
         StatsData,
         Balances,
         Allowances,
         UsedBlocks,
         TxLog,
+        CapEnv
     ) = ic::stable_restore().unwrap();
     let stats = ic::get_mut::<StatsData>();
     *stats = metadata_stored;
@@ -737,6 +739,8 @@ fn post_upgrade() {
 
     let tx_log = tx_log();
     *tx_log = tx_log_stored;
+
+    CapEnv::load_from_archive(cap_env);
 }
 
 async fn add_record(
