@@ -429,8 +429,8 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
     .await
 }
 
-#[update(name = "mint_for")]
-#[candid_method(update, rename = "mint_for")]
+#[update(name = "mintFor")]
+#[candid_method(update, rename = "mintFor")]
 async fn mint_for(sub_account: Option<Subaccount>, block_height: BlockHeight, to_p: Principal) -> TxReceipt {
     let caller = ic::caller();
 
