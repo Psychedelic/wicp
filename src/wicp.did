@@ -52,6 +52,7 @@ service : (
   isBlockUsed : (nat64) -> (bool) query;
   logo : () -> (text) query;
   mint : (opt vec nat8, nat64) -> (Result);
+  mintFor : (opt vec nat8, nat64, principal) -> (Result);
   name : () -> (text) query;
   owner : () -> (principal) query;
   setFee : (nat) -> ();

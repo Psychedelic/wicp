@@ -429,6 +429,114 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
     .await
 }
 
+#[update(name = "mintFor")]
+#[candid_method(update, rename = "mintFor")]
+async fn mint_for(sub_account: Option<Subaccount>, block_height: BlockHeight, to_p: Principal) -> TxReceipt {
+    let caller = ic::caller();
+
+    let response: Result<BlockRes, (Option<i32>, String)> =
+        call_with_cleanup(LEDGER_CANISTER_ID, "block_pb", protobuf, block_height).await;
+    let encode_block = match response {
+        Ok(BlockRes(res)) => {
+            match res {
+                Some(result_encode_block) => {
+                    match result_encode_block {
+                        Ok(encode_block) => encode_block,
+                        Err(e) => {
+                            let storage = match Principal::from_text(e.to_string()) {
+                                Ok(p) => p,
+                                Err(_) => return Err(TxError::Other),
+                            };
+                            let storage_canister = match CanisterId::new(PrincipalId::from(storage)) {
+                                Ok(c) => c,
+                                Err(_) => return Err(TxError::Other),
+                            };
+                            let response: Result<BlockRes, (Option<i32>, String)> =
+                                call_with_cleanup(storage_canister, "get_block_pb", protobuf, block_height).await;
+                            match response {
+                                Ok(BlockRes(res)) => {
+                                    match res {
+                                        Some(result_encode_block) => {
+                                            match result_encode_block {
+                                                Ok(encode_block) => encode_block,
+                                                Err(_) => return Err(TxError::Other),
+                                            }
+                                        },
+                                        None => return Err(TxError::Other),
+                                    }
+                                },
+                                Err(_) => return Err(TxError::Other),
+                            }
+                        }
+                    }
+                },
+                None => return Err(TxError::Other),
+            }
+        },
+        Err(_) => return Err(TxError::Other),
+    };
+
+    let block = match encode_block.decode() {
+        Ok(block) => block,
+        Err(_) => return Err(TxError::Other),
+    };
+
+    let (from, to, amount) = match block.transaction.operation {
+        Operate::Transfer {
+            from,
+            to,
+            amount,
+            fee: _,
+        } => (from, to, amount),
+        _ => {
+            return Err(TxError::ErrorOperationStyle);
+        }
+    };
+
+    let blocks = ic::get_mut::<UsedBlocks>();
+    assert_eq!(blocks.insert(block_height), true);
+
+    let to_pid = PrincipalId::from(to_p);
+    let to_account = AccountIdentifier::new(to_pid, sub_account);
+
+    if to_account != from {
+        blocks.remove(&block_height);
+        return Err(TxError::Unauthorized);
+    }
+
+    if AccountIdentifier::new(PrincipalId::from(ic::id()), None) != to {
+        blocks.remove(&block_height);
+        return Err(TxError::ErrorTo);
+    }
+
+    if amount < THRESHOLD {
+        blocks.remove(&block_height);
+        return Err(TxError::AmountTooSmall);
+    }
+
+    let value = Nat::from(Tokens::get_e8s(amount));
+
+    let user_balance = balance_of(to_p);
+    let balances = ic::get_mut::<Balances>();
+    balances.insert(to_p, user_balance + value.clone());
+    let stats = ic::get_mut::<StatsData>();
+    stats.total_supply += value.clone();
+    stats.history_size += 1;
+
+    add_record(
+        Some(caller),
+        Operation::Mint,
+        to_p,
+        to_p,
+        value,
+        Nat::from(0),
+        ic::time(),
+        TransactionStatus::Succeeded,
+    )
+    .await
+}
+
+
 #[update(name = "withdraw")]
 #[candid_method(update, rename = "withdraw")]
 async fn withdraw(value: u64, to: String) -> TxReceipt {
