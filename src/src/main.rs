@@ -583,7 +583,7 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
             .await
         }
         Err(_) => {
-            balances.insert(caller, caller_balance);
+            balances.insert(caller, balance_of(caller) + value_nat.clone());
             stats.total_supply += value_nat;
             return Err(TxError::LedgerTrap);
         }
