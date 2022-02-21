@@ -9,6 +9,7 @@
 
 # dfx temporary files
 .dfx/
+canister_ids.json
 # state icx-proxy-pid webserver-port replica-configuration
 
 # frontend code

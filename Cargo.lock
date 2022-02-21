@@ -2173,25 +2173,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust"
-version = "0.1.0"
-dependencies = [
- "assert-panic",
- "async-std",
- "candid",
- "cap-sdk",
- "cap-standards",
- "dfn_core",
- "dfn_protobuf",
- "ic-cdk",
- "ic-cdk-macros",
- "ic-kit",
- "ic-types 0.8.0",
- "ledger-canister",
- "serde",
-]
-
-[[package]]
 name = "rustversion"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2755,6 +2736,25 @@ dependencies = [
  "either",
  "lazy_static",
  "libc",
+]
+
+[[package]]
+name = "wicp"
+version = "1.0.0"
+dependencies = [
+ "assert-panic",
+ "async-std",
+ "candid",
+ "cap-sdk",
+ "cap-standards",
+ "dfn_core",
+ "dfn_protobuf",
+ "ic-cdk",
+ "ic-cdk-macros",
+ "ic-kit",
+ "ic-types 0.8.0",
+ "ledger-canister",
+ "serde",
 ]
 
 [[package]]
