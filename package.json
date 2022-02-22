@@ -7,8 +7,8 @@
 	"author": "Ossian Mapes <oz@fleek.co>",
 	"license": "MIT",
 	"scripts": {
-		"cap:init": "",
-		"cap:start": "",
+		"cap:init": "git submodule update --init --recursive",
+		"cap:start": "cd ./cap && dfx deploy ic-history-router",
 		"dip20:healthcheck": "./.scripts/healthcheck.sh",
 		"dip20:candid": "cargo run --release > ./token/candid/token.did",
 		"dip20:deploy": "./.scripts/deploy.sh",
