@@ -138,8 +138,8 @@ thread_local! {
     static BLOCKS: RefCell<HashSet<BlockHeight>> = RefCell::new(HashSet::default());
     static STATS: RefCell<StatsData> = RefCell::new(StatsData::default());
     static TXLOG: RefCell<TxLog> = RefCell::new(TxLog::default());
-    static GENESIS: RefCell<Genesis> = RefCell::new(Genesis::default());
     /*   flexible   */
+    static GENESIS: RefCell<Genesis> = RefCell::new(Genesis::default());
 }
 
 const LEDGER_CANISTER_ID: CanisterId = CanisterId::from_u64(2);

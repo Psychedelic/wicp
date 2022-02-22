@@ -1,0 +1,18 @@
+{
+	"name": "wicp",
+	"description": "This package provides the WICP spec",
+	"version": "2.0.0",
+	"main": "index.js",
+	"repository": "https://github.com/Psychedelic/wicp.git",
+	"author": "Ossian Mapes <oz@fleek.co>",
+	"license": "MIT",
+	"scripts": {
+		"cap:init": "git submodule update --init --recursive",
+		"cap:start": "cd ./cap && dfx deploy ic-history-router",
+		"dip20:healthcheck": "./.scripts/healthcheck.sh",
+		"dip20:candid": "cargo run --release > ./token/candid/token.did",
+		"dip20:deploy": "./.scripts/deploy.sh",
+		"dip20:reset": "dfx stop && rm -rf .dfx && rm -rf ./cap/.dfx",
+		"test": "cargo test -- --show-output"
+	}
+}
