@@ -3,6 +3,11 @@
 
 #!/bin/bash
 
+if [[ $CI -eq 1 ]]; then
+    npm run cap:init
+    npm run cap:start
+fi
+
 printf "🙏 Verifying the Cap Service status, please wait...\n\n"
 if [ -z $CAP_ID ]; then 
     if [[ $NETWORK == "ic" ]]; then
