@@ -52,7 +52,7 @@ metadata() {
 
 
 tests() {
-    #deploy
+    deploy
     info
     balance
     allowance
