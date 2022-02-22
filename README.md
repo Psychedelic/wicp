@@ -1,11 +1,13 @@
 ![Frame 22](https://user-images.githubusercontent.com/73345016/144860113-c04a84ab-cb4f-4623-818c-ccf8e0541dcf.png)
 
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-2.0.0-blue.svg)](https://conventionalcommits.org) [![Healthcheck](https://github.com/Psychedelic/wicp/actions/workflows/pr-healthcheck-runner.yml/badge.svg)](https://github.com/Psychedelic/wicp/actions/workflows/pr-healthcheck-runner.yml)
+
 # Wrapped ICP - WICP
 
 Wrapped ICP (WICP) is a wrapped version of the IC's native token, ICP. Each WICP will be backed 1:1 with ICP, meaning that 1 WICP will always have the exact same value as 1 ICP. The only difference is that, unlike ICP, WICP uses the DIP20 fungible token standard that is specifically designed to allow for interoperability between dApps and other tokens.
 
--   [Wrapped ICP Website](https://dank.ooo/wicp/)
--   [Using WICP Guide](https://docs.dank.ooo/wicp/getting-started/)
+- [Wrapped ICP Website](https://dank.ooo/wicp/)
+- [Using WICP Guide](https://docs.dank.ooo/wicp/getting-started/)
 
 ---
 
@@ -13,8 +15,8 @@ Wrapped ICP (WICP) is a wrapped version of the IC's native token, ICP. Each WICP
 
 In order to interact with the Internet Computer mainnet version of the Wrapped ICP (WICP) canister, you need the address.
 
--   WICP Canister ID: `utozz-siaaa-aaaam-qaaxq-cai`
--   WICP Account ID: `cc659fe529756bae6f72db9937c6c60cf7ad57eb4ac5f930a75748927aab469a`
+- WICP Canister ID: `utozz-siaaa-aaaam-qaaxq-cai`
+- WICP Account ID: `cc659fe529756bae6f72db9937c6c60cf7ad57eb4ac5f930a75748927aab469a`
 
 You have to use this address (Canister ID) to make your calls, with the exception of the Account ID during the mint.
 
@@ -175,5 +177,19 @@ dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai g
 Returns the history size.
 
 ```bash
-dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai historySize
+dfx canister --network=ic --no-wallet call --query wicp historySize
+```
+
+## 🙏 Contributing
+
+Create branches from the `main` branch and name it in accordance to **conventional commits** [here](https://www.conventionalcommits.org/en/v1.0.0/), or follow the examples bellow:
+
+```txt
+test: 💍 Adding missing tests
+feat: 🎸 A new feature
+fix: 🐛 A bug fix
+chore: 🤖 Build process or auxiliary tool changes
+docs: ✏️ Documentation only changes
+refactor: 💡 A code change that neither fixes a bug or adds a feature
+style: 💄 Markup, white-space, formatting, missing semi-colons...
 ```
