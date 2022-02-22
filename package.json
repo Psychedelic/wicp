@@ -1,9 +1,9 @@
 {
-	"name": "dip20",
-	"description": "This package provides the DIP20 developer utility scripts",
+	"name": "wicp",
+	"description": "This package provides the WICP spec",
 	"version": "2.0.0",
 	"main": "index.js",
-	"repository": "https://github.com/Psychedelic/DIP20.git",
+	"repository": "https://github.com/Psychedelic/wicp.git",
 	"author": "Ossian Mapes <oz@fleek.co>",
 	"license": "MIT",
 	"scripts": {
