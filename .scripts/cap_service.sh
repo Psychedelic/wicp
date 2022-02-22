@@ -1,12 +1,6 @@
 #!/bin/bash
 # CAP local Service setup
 
-if [[ $CI -eq 1 ]]; then
-    # sync and deploy cap if inside a CI environment
-    npm run cap:init
-    npm run cap:start
-fi
-
 printf "🙏 Verifying the Cap Service status, please wait...\n\n"
 if [ -z $CAP_ID ]; then 
     if [[ $NETWORK == "ic" ]]; then
