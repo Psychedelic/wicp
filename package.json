@@ -1,0 +1,18 @@
+{
+	"name": "dip20",
+	"description": "This package provides the DIP20 developer utility scripts",
+	"version": "2.0.0",
+	"main": "index.js",
+	"repository": "https://github.com/Psychedelic/DIP20.git",
+	"author": "Ossian Mapes <oz@fleek.co>",
+	"license": "MIT",
+	"scripts": {
+		"cap:init": "",
+		"cap:start": "",
+		"dip20:healthcheck": "./.scripts/healthcheck.sh",
+		"dip20:candid": "cargo run --release > ./token/candid/token.did",
+		"dip20:deploy": "./.scripts/deploy.sh",
+		"dip20:reset": "dfx stop && rm -rf .dfx",
+		"test": "cargo test -- --show-output"
+	}
+}
