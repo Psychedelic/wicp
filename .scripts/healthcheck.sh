@@ -1,108 +1,64 @@
 #/bin/bash
 # --- HEALTHCHECK.SH --- 
+ 
+NETWORK="local"
 
 deploy() {
-    ./.scripts/deploy.sh local
+    ./.scripts/deploy.sh $NETWORK
+}
+
+info() {
+    printf "💎 WICP Canister Info:\n\n"
+    printf "Name: "
+    dfx canister --network $NETWORK --no-wallet call wicp name
+    printf "Symbol: "
+    dfx canister --network $NETWORK --no-wallet call wicp symbol
+    printf "Total Supply: "
+    dfx canister --network $NETWORK --no-wallet call wicp totalSupply
+    printf "Decimals: "
+    dfx canister --network $NETWORK --no-wallet call wicp decimals
+    printf "History Size: "
+    dfx canister --network $NETWORK --no-wallet call wicp historySize
+}
+
+balance() {
+    printf "💎 Balances :\n\n"
+    printf "Default Balance: "
+    dfx canister --network $NETWORK --no-wallet call wicp balanceOf "(principal \"$DEFAULT_PRINCIPAL_ID\")"
+    printf "Alice Balance: "
+    dfx canister --network $NETWORK --no-wallet call wicp balanceOf "(principal \"$ALICE_PRINCIPAL_ID\")"
+    printf "Bob Balance: "
+    dfx canister --network $NETWORK --no-wallet call wicp balanceOf "(principal \"$BOB_PRINCIPAL_ID\")"
 }
 
 allowance() {
-    pem=$AlicePem
-    from="${nameToPrincipal[$1]}"
-    to="${nameToPrincipal[$2]}"
-    icx --pem=$pem query $tokenID allowance "(principal \"$from\", principal \"$to\")" $tokenPrologueXtc
+    printf "Allow Alice access 1000 WICP from the dfx principal id\n"
+    dfx canister --network $NETWORK --no-wallet call wicp approve "(principal \"$ALICE_PRINCIPAL_ID\", 1000:nat)"
 }
 
-decimals(){
-    pem=$AlicePem
-    icx --pem=$pem query $tokenID decimals "()" $tokenPrologueXtc
+transferFrom() {
+    printf "Transfer 1000 WICP from dfx principal id to Bob, as user Alice"
+    HOME=$ALICE_HOME dfx canister --network $NETWORK --no-wallet call wicp transferFrom "(principal \"$DEFAULT_PRINCIPAL_ID\",principal \"$BOB_PRINCIPAL_ID\", 999:nat)"
 }
 
-getMetadata(){
-    pem=$AlicePem
-    icx --pem=$pem query $tokenID getMetadata "()" $tokenPrologueXtc
+transfer() {
+    printf "Transfer 500 WICP Bob -> Alice\n"
+    HOME=$BOB_HOME dfx canister --network $NETWORK --no-wallet call wicp transfer "(principal \"$ALICE_PRINCIPAL_ID\", 500:nat)"
 }
 
-historySize(){
-    pem=$AlicePem
-    icx --pem=$pem query $tokenID historySize "()" $tokenPrologueXtc
+metadata() {
+    printf "Metadata: %s\n\n" "$(dfx canister --network $NETWORK --no-wallet call wicp getMetadata)"
 }
 
-logo(){
-    pem=$AlicePem
-    icx --pem=$pem query $tokenID logo "()" $tokenPrologueXtc
-}
-
-name(){
-    pem=$AlicePem
-    icx --pem=$pem query $tokenID nameErc20 "()" $tokenPrologueXtc
-}
-
-symbol(){
-    pem=$AlicePem
-    icx --pem=$pem query $tokenID symbol "()" $tokenPrologueXtc
-}
-
-totalSupply(){
-    pem=$AlicePem
-    icx --pem=$pem query $tokenID totalSupply "()" $tokenPrologueXtc
-}
-
-getTransaction(){
-	txId=$1
-	pem=$AlicePem
-	icx --pem=$pem update $tokenID getTransaction "($txId)" $tokenPrologueXtc
-}
-
-getTransactions(){
-	txId=$1
-    limit=$2
-	pem=$AlicePem
-	icx --pem=$pem update $tokenID getTransactions "($txId, $limit)" $tokenPrologueXtc
-}
-
-approve(){
-	pem="${nameToPem[$1]}"
-	to="${nameToPrincipal[$2]}"
-	amount=$3
-	icx --pem=$pem update $tokenID approve "(principal \"$to\", $amount)" $tokenPrologueXtc
-}
-
-transfer(){
-	fromPem="${nameToPem[$1]}"
-	to="${nameToPrincipal[$2]}"
-	amount=$3
-	icx --pem=$fromPem update $tokenID transfer "(principal \"$to\", $amount)" $tokenPrologueXtc
-}
-
-transferFrom(){
-	from="${nameToPrincipal[$1]}"
-	to="${nameToPrincipal[$2]}"
-	amount=$3
-	callerPem="${nameToPem[$1]}"
-	if [ "$#" -eq 4 ]; then
-    	callerPem="${nameToPem[$4]}"
-	fi
-	icx --pem=$callerPem update $tokenID transferFrom "(principal \"$from\",principal \"$to\", $amount)" $tokenPrologueXtc
-}
-
-balanceOf(){
-	pem=$AlicePem
-	account="${nameToPrincipal[$1]}"
-	icx --pem=$pem query $tokenID balanceOf "(principal \"$account\")" $tokenPrologueXtc
-}
 
 tests() {
-    deploy
-    name
-    symbol
-    # logo
-    decimals
-    getMetadata
-    historySize
-    totalSupply
-
+    #deploy
+    info
+    balance
     allowance
+    transferFrom
+    transfer
 }
 
-source .scripts/identity.sh # setup temporary identities
-deploy
+. ./.scripts/identity.sh # setup temporary identities 
+tests

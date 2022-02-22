@@ -2,6 +2,7 @@
 
 DFX_IDENTITY=$(dfx identity whoami)
 
+# Bob and alice are newly created each time
 ALICE_HOME=$(mktemp -d 2>/dev/null || mktemp -d -t alice-temp)
 BOB_HOME=$(mktemp -d 2>/dev/null || mktemp -d -t bob-temp)
 DEFAULT_HOME="$HOME"

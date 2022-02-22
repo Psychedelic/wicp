@@ -8,6 +8,10 @@ fi
 NETWORK=$1
 MODE=$2
 
+if [ -z $GENESIS_AMT ]; then
+  GENESIS_AMT="1000000000"
+fi
+
 source .scripts/cap_service.sh # this handles setting the cap id variable, and checks to see if it's already been set
 
 if [[ "$MODE" == "reinstall" ]]; then
@@ -20,7 +24,7 @@ dfx deploy --network $NETWORK wicp \
         \"wicp\",
         \"WICP\",
         8:nat8,
-        1000000000:nat,
+        $GENESIS_AMT:nat,
         principal \"$(dfx identity get-principal)\", 
         0, 
         principal \"$(dfx identity get-principal)\", 
