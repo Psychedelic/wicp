@@ -1,9 +1,8 @@
 #!/bin/bash
 # CAP local Service setup
 
-#!/bin/bash
-
 if [[ $CI -eq 1 ]]; then
+    # sync and deploy cap if inside a CI environment
     npm run cap:init
     npm run cap:start
 fi
