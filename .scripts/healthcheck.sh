@@ -58,6 +58,7 @@ tests() {
     allowance
     transferFrom
     transfer
+    balance
 }
 
 . ./.scripts/identity.sh # setup temporary identities 
