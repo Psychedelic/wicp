@@ -180,7 +180,7 @@ dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai h
 
 ## 🙏 Using this project
 
-You use the projects tooling with either `npm run <script>`, `yarn <script>`, or directly running the script with `./.scripts/<script>.sh`
+You use the projects tooling with either `npm run <script>` or `yarn <script>`
 
 ### Healthcheck
 
@@ -206,6 +206,8 @@ CAP_ID=lj532-6iaaa-aaaah-qcc7a-cai npm run dip20:deploy local
 ```
 
 The public CAP canister is automatically used if the network is `ic`, unless explicitly specified
+
+CAP can also be manually deployed, using `cap:init` and `cap:start`
 
 ## 🙏 Contributing
 
