@@ -14,7 +14,7 @@ fi
 
 source .scripts/cap_service.sh # this handles setting the cap id variable, and checks to see if it's already been set
 
-if [[ "$MODE" -eq "reinstall" ]]; then
+if [[ "$MODE" == "reinstall" ]]; then
   MODE="--mode reinstall"
 fi
 
