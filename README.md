@@ -180,23 +180,9 @@ Returns the history size.
 dfx canister --network=ic --no-wallet call --query wicp historySize
 ```
 
-## 🙏 Contributing
-
-Create branches from the `main` branch and name it in accordance to **conventional commits** [here](https://www.conventionalcommits.org/en/v1.0.0/), or follow the examples bellow:
-
-```txt
-test: 💍 Adding missing tests
-feat: 🎸 A new feature
-fix: 🐛 A bug fix
-chore: 🤖 Build process or auxiliary tool changes
-docs: ✏️ Documentation only changes
-refactor: 💡 A code change that neither fixes a bug or adds a feature
-style: 💄 Markup, white-space, formatting, missing semi-colons...
-```
-
 ## 🤖 Using this project
 
-You use the projects tooling with either `npm run <script>` or `yarn <script>`
+You can use this projects tooling with either `npm run <script>` or `yarn <script>`
 
 ### Healthcheck
 
@@ -214,16 +200,20 @@ The deploy script can be used with any network configured in `dfx.json`. If you 
 
 ### Using existing CAP canister
 
-You can set the environment variable `CAP_ID` to skip the cap prompts and setting up a new cap canister on the network, ie
+CAP can be manually deployed, using
 
 ```sh
-CAP_ID=lj532-6iaaa-aaaah-qcc7a-cai npm run dip20:healthcheck
-CAP_ID=lj532-6iaaa-aaaah-qcc7a-cai npm run dip20:deploy local
+cap:init # only needs to be ran once to initalize the cap submodule
+cap:deploy
 ```
 
-The public CAP canister is automatically used if the network is `ic`, unless explicitly specified
+You can set the environment variable `CAP_ID` to skip the cap prompts and setting up a new cap canister on the network, if you already have one setup.
 
-CAP can also be manually deployed, using `cap:init` and `cap:start`
+`CAP_ID=lj532-6iaaa-aaaah-qcc7a-cai npm run dip20:deploy local`
+
+This also works with the healthcheck. The mainnet CAP canister is automatically used if the network is `ic`, unless explicitly specified.
+
+CAP requires `ic-cdk-optimizer` to be installed with cargo to build.
 
 ## 🙏 Contributing
 
