@@ -1,6 +1,7 @@
 #/bin/bash
 # --- HEALTHCHECK.SH --- 
- 
+
+set -e # exit when any command fails
 NETWORK="local"
 
 deploy() {
