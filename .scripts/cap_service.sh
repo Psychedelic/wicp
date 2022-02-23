@@ -12,9 +12,10 @@ if [ -z $CAP_ID ]; then
            printf "⚠️  Warning: The Cap Service is required.\n\n"
            read -r -p "🤖 Enter the local Cap container ID (or nothing to continue to CAP setup): " CAP_ID
             if [ -z $CAP_ID ]; then
-                read -r -p "🤖 Would you like me to start the Cap Service for you [Y/n]? " CONT
+                read -r -p "🤖 Do you want to deploy the CAP canister on the local network? [Y/n]? " CONT
 
                 if [ "$CONT" = "Y" ]; then
+                    npm run cap:init
                     npm run cap:start
                     CAP_ID=$(cd ./cap && dfx canister id ic-history-router)
                 fi
