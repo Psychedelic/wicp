@@ -178,7 +178,7 @@ Returns the history size.
 dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai historySize
 ```
 
-## 🙏 Using this project
+## 🤖 Using this project
 
 You use the projects tooling with either `npm run <script>` or `yarn <script>`
 
