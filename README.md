@@ -112,12 +112,12 @@ Returns the amount which spender is still allowed to withdraw from owner.
 dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai allowance "(principal \"owner-account-principal\", principal \"spender-account-principal\")"
 ```
 
-### Get token logo - getLogo
+### Get token logo - logo
 
 Returns the logo of Wrapped ICP (WICP).
 
 ```bash
-dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai getLogo
+dfx canister --network=ic --no-wallet call --query utozz-siaaa-aaaam-qaaxq-cai logo
 ```
 
 ---
