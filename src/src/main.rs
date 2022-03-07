@@ -210,7 +210,7 @@ async fn transfer(to: Principal, value: Nat) -> TxReceipt {
     _transfer(from, to, value.clone());
     stats.history_size += 1;
 
-    add_record(
+    ic::spawn(add_record(
         Some(from),
         Operation::Transfer,
         from,
@@ -219,8 +219,8 @@ async fn transfer(to: Principal, value: Nat) -> TxReceipt {
         stats.fee.clone(),
         ic::time(),
         TransactionStatus::Succeeded,
-    )
-    .await
+    ));
+    Ok(Nat::from((stats.history_size - 1) as u64))
 }
 
 #[update(name = "transferFrom")]
@@ -260,7 +260,7 @@ async fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt 
         }
     }
     stats.history_size += 1;
-    add_record(
+    ic::spawn(add_record(
         Some(owner),
         Operation::TransferFrom,
         from,
@@ -269,8 +269,8 @@ async fn transfer_from(from: Principal, to: Principal, value: Nat) -> TxReceipt 
         stats.fee.clone(),
         ic::time(),
         TransactionStatus::Succeeded,
-    )
-    .await
+    ));
+    Ok(Nat::from((stats.history_size - 1) as u64))
 }
 
 #[update(name = "approve")]
@@ -309,7 +309,7 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
         }
     }
     stats.history_size += 1;
-    add_record(
+    ic::spawn(add_record(
         Some(owner),
         Operation::Approve,
         owner,
@@ -318,8 +318,8 @@ async fn approve(spender: Principal, value: Nat) -> TxReceipt {
         stats.fee.clone(),
         ic::time(),
         TransactionStatus::Succeeded,
-    )
-    .await
+    ));
+    Ok(Nat::from((stats.history_size - 1) as u64))
 }
 
 #[update(name = "mint")]
@@ -416,7 +416,7 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
     stats.total_supply += value.clone();
     stats.history_size += 1;
 
-    add_record(
+    ic::spawn(add_record(
         Some(caller),
         Operation::Mint,
         caller,
@@ -425,8 +425,8 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
         Nat::from(0),
         ic::time(),
         TransactionStatus::Succeeded,
-    )
-    .await
+    ));
+    Ok(Nat::from((stats.history_size - 1) as u64))
 }
 
 #[update(name = "mintFor")]
@@ -523,7 +523,7 @@ async fn mint_for(sub_account: Option<Subaccount>, block_height: BlockHeight, to
     stats.total_supply += value.clone();
     stats.history_size += 1;
 
-    add_record(
+    ic::spawn(add_record(
         Some(caller),
         Operation::Mint,
         to_p,
@@ -532,8 +532,8 @@ async fn mint_for(sub_account: Option<Subaccount>, block_height: BlockHeight, to
         Nat::from(0),
         ic::time(),
         TransactionStatus::Succeeded,
-    )
-    .await
+    ));
+    Ok(Nat::from((stats.history_size - 1) as u64))
 }
 
 
@@ -570,7 +570,7 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
     match result {
         Ok(_) => {
             stats.history_size += 1;
-            add_record(
+            ic::spawn(add_record(
                 Some(caller),
                 Operation::Burn,
                 caller,
@@ -579,8 +579,8 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
                 Nat::from(0),
                 ic::time(),
                 TransactionStatus::Succeeded,
-            )
-            .await
+            ));
+            Ok(Nat::from((stats.history_size - 1) as u64))
         }
         Err(_) => {
             balances.insert(caller, balance_of(caller) + value_nat.clone());
@@ -638,7 +638,8 @@ async fn set_genesis() -> TxReceipt {
         genesis.timestamp,
         genesis.status,
     )
-    .await
+    .await;
+    Ok(Nat::from((stats.history_size) as u64))
 }
 
 #[query(name = "balanceOf")]
@@ -860,7 +861,7 @@ async fn add_record(
     fee: Nat,
     timestamp: u64,
     status: TransactionStatus,
-) -> TxReceipt {
+) -> () {
     insert_into_cap(Into::<IndefiniteEvent>::into(Into::<Event>::into(Into::<
         TypedEvent<DIP20Details>,
     >::into(
@@ -876,7 +877,8 @@ async fn add_record(
             operation: op,
         },
     ))))
-    .await
+    .await;
+    ()
 }
 
 pub async fn insert_into_cap(ie: IndefiniteEvent) -> TxReceipt {
