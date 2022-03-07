@@ -800,6 +800,46 @@ fn is_block_used(block_number: BlockHeight) -> bool {
     ic::get::<UsedBlocks>().contains(&block_number)
 }
 
+#[query(name = "getStats")]
+#[candid_method(query, rename = "getStats")]
+fn get_stats() -> &'static StatsData {
+    let stats = ic::get::<StatsData>();
+    assert_eq!(ic::caller(), stats.owner);
+    stats
+}
+
+#[query(name = "getBalances")]
+#[candid_method(query, rename = "getBalances")]
+fn get_balances() -> &'static Balances {
+    let stats = ic::get::<StatsData>();
+    assert_eq!(ic::caller(), stats.owner);
+    ic::get::<Balances>()
+}
+
+#[query(name = "getAllowances")]
+#[candid_method(query, rename = "getAllowances")]
+fn get_allowances() -> &'static Allowances {
+    let stats = ic::get::<StatsData>();
+    assert_eq!(ic::caller(), stats.owner);
+    ic::get::<Allowances>()
+}
+
+#[query(name = "getUseBlocks")]
+#[candid_method(query, rename = "getUseBlocks")]
+fn get_used_blocks() -> &'static UsedBlocks {
+    let stats = ic::get::<StatsData>();
+    assert_eq!(ic::caller(), stats.owner);
+    ic::get::<UsedBlocks>()
+}
+
+#[query(name = "getTxLogs")]
+#[candid_method(query, rename = "getTxLogs")]
+fn get_tx_logs() -> &'static TxLog {
+    let stats = ic::get::<StatsData>();
+    assert_eq!(ic::caller(), stats.owner);
+    tx_log()
+}
+
 #[cfg(any(target_arch = "wasm32", test))]
 fn main() {}
 

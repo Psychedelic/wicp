@@ -1,3 +1,19 @@
+type DetailValue = variant {
+  I64 : int64;
+  U64 : nat64;
+  Vec : vec DetailValue;
+  Slice : vec nat8;
+  Text : text;
+  True;
+  False;
+  Float : float64;
+  Principal : principal;
+};
+type IndefiniteEvent = record {
+  operation : text;
+  details : vec record { text; DetailValue };
+  caller : principal;
+};
 type Metadata = record {
   fee : nat;
   decimals : nat8;
@@ -8,6 +24,18 @@ type Metadata = record {
   symbol : text;
 };
 type Result = variant { Ok : nat; Err : TxError };
+type StatsData = record {
+  fee : nat;
+  deploy_time : nat64;
+  decimals : nat8;
+  fee_to : principal;
+  owner : principal;
+  history_size : nat64;
+  logo : text;
+  name : text;
+  total_supply : nat;
+  symbol : text;
+};
 type TokenInfo = record {
   holderNumber : nat64;
   deployTime : nat64;
@@ -27,6 +55,7 @@ type TxError = variant {
   BlockUsed;
   AmountTooSmall;
 };
+type TxLog = record { ie_records : vec IndefiniteEvent };
 service : (
   text,
   text,
@@ -43,10 +72,17 @@ service : (
   balanceOf : (principal) -> (nat) query;
   decimals : () -> (nat8) query;
   getAllowanceSize : () -> (nat64) query;
+  getAllowances : () -> (
+      vec record { principal; vec record { principal; nat } },
+    ) query;
+  getBalances : () -> (vec record { principal; nat }) query;
   getBlockUsed : () -> (vec nat64) query;
   getHolders : (nat64, nat64) -> (vec record { principal; nat }) query;
   getMetadata : () -> (Metadata) query;
+  getStats : () -> (StatsData) query;
   getTokenInfo : () -> (TokenInfo) query;
+  getTxLogs : () -> (TxLog) query;
+  getUseBlocks : () -> (vec nat64) query;
   getUserApprovals : (principal) -> (vec record { principal; nat }) query;
   historySize : () -> (nat64) query;
   isBlockUsed : (nat64) -> (bool) query;
