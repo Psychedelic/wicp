@@ -824,8 +824,8 @@ fn get_allowances() -> &'static Allowances {
     ic::get::<Allowances>()
 }
 
-#[query(name = "getUseBlocks")]
-#[candid_method(query, rename = "getUseBlocks")]
+#[query(name = "getUsedBlocks")]
+#[candid_method(query, rename = "getUsedBlocks")]
 fn get_used_blocks() -> &'static UsedBlocks {
     let stats = ic::get::<StatsData>();
     assert_eq!(ic::caller(), stats.owner);
