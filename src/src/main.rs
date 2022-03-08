@@ -897,7 +897,9 @@ async fn insert_into_cap_priv(ie: IndefiniteEvent) -> TxReceipt {
         tx_log().ie_records.push_back(ie.clone());
     }
 
-    insert_res
+    //insert_res
+    let stats = ic::get::<StatsData>();
+    Ok(Nat::from(stats.history_size as u64))
 }
 
 #[cfg(test)]
