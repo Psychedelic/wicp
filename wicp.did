@@ -1,0 +1,41 @@
+type InitArgs = record {
+  cap : opt principal;
+  fee : opt nat;
+  decimals : opt nat8;
+  fee_to : opt principal;
+  logo : opt text;
+  name : opt text;
+  custodians : opt vec principal;
+  symbol : opt text;
+};
+type ManualReply = record {
+  cap : opt principal;
+  fee : opt nat;
+  decimals : opt nat8;
+  fee_to : opt principal;
+  logo : opt text;
+  name : opt text;
+  created_at : nat64;
+  upgraded_at : nat64;
+  custodians : vec principal;
+  symbol : opt text;
+};
+service : (opt InitArgs) -> {
+  cap : () -> (opt principal) query;
+  custodians : () -> (vec principal) query;
+  decimals : () -> (opt nat8) query;
+  fee : () -> (opt nat) query;
+  feeTo : () -> (opt principal) query;
+  logo : () -> (opt text) query;
+  metadata : () -> (ManualReply) query;
+  name : () -> (opt text) query;
+  setCap : (principal) -> ();
+  setCustodians : (vec principal) -> ();
+  setDecimals : (nat8) -> ();
+  setFee : (nat) -> ();
+  setFeeTo : (principal) -> ();
+  setLogo : (text) -> ();
+  setName : (text) -> ();
+  setSymbol : (text) -> ();
+  symbol : () -> (opt text) query;
+}
