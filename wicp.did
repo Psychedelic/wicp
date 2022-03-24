@@ -1,3 +1,20 @@
+type GenericValue = variant {
+  Nat64Content : nat64;
+  Nat32Content : nat32;
+  BoolContent : bool;
+  Nat8Content : nat8;
+  Int64Content : int64;
+  IntContent : int;
+  NatContent : nat;
+  Nat16Content : nat16;
+  Int32Content : int32;
+  Int8Content : int8;
+  Int16Content : int16;
+  BlobContent : vec nat8;
+  NestedContent : Vec;
+  Principal : principal;
+  TextContent : text;
+};
 type InitArgs = record {
   cap : opt principal;
   fee : opt nat;
@@ -20,12 +37,48 @@ type ManualReply = record {
   custodians : vec principal;
   symbol : opt text;
 };
+type Stats = record {
+  cycles : nat;
+  total_transactions : nat;
+  total_unique_holders : nat;
+  total_supply : nat;
+};
+type TxEvent = record {
+  time : nat64;
+  operation : text;
+  details : vec record { text; GenericValue };
+  caller : principal;
+};
+type Vec = vec record {
+  text;
+  variant {
+    Nat64Content : nat64;
+    Nat32Content : nat32;
+    BoolContent : bool;
+    Nat8Content : nat8;
+    Int64Content : int64;
+    IntContent : int;
+    NatContent : nat;
+    Nat16Content : nat16;
+    Int32Content : int32;
+    Int8Content : int8;
+    Int16Content : int16;
+    BlobContent : vec nat8;
+    NestedContent : Vec;
+    Principal : principal;
+    TextContent : text;
+  };
+};
 service : (opt InitArgs) -> {
+  allowance : (principal, principal) -> (nat) query;
+  balanceOf : (principal) -> (nat) query;
   cap : () -> (opt principal) query;
   custodians : () -> (vec principal) query;
+  cycles : () -> (nat) query;
   decimals : () -> (opt nat8) query;
   fee : () -> (opt nat) query;
   feeTo : () -> (opt principal) query;
+  isBlockUsed : (nat64) -> (bool) query;
   logo : () -> (opt text) query;
   metadata : () -> (ManualReply) query;
   name : () -> (opt text) query;
@@ -37,5 +90,10 @@ service : (opt InitArgs) -> {
   setLogo : (text) -> ();
   setName : (text) -> ();
   setSymbol : (text) -> ();
+  stats : () -> (Stats) query;
   symbol : () -> (opt text) query;
+  totalSupply : () -> (nat) query;
+  totalTransactions : () -> (nat) query;
+  totalUniqueHolders : () -> (nat) query;
+  transaction : (nat) -> (opt TxEvent) query;
 }

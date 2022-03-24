@@ -1,12 +1,12 @@
 use ic_cdk::api::call::ManualReply;
-use ic_cdk::api::{caller, time, trap};
+use ic_cdk::api::{caller, canister_balance128, time, trap};
 use ic_cdk::export::candid::{candid_method, CandidType, Deserialize, Int, Nat};
 use ic_cdk::export::Principal;
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
 use ledger_canister::BlockHeight;
 use num_traits::cast::ToPrimitive;
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet};
 use std::ops::Not;
 use types::*;
 mod types {
@@ -22,6 +22,7 @@ mod types {
         pub custodians: Option<HashSet<Principal>>,
         pub cap: Option<Principal>,
     }
+    #[derive(CandidType)]
     pub enum GenericValue {
         BoolContent(bool),
         TextContent(String),
@@ -52,17 +53,15 @@ mod types {
         pub created_at: u64,
         pub upgraded_at: u64,
     }
-    pub enum TxError {
-        InsufficientBalance,
-        InsufficientAllowance,
-        Unauthorized,
-        LedgerTrap,
-        AmountTooSmall,
-        BlockUsed,
-        ErrorOperationStyle,
-        ErrorTo,
-        Other,
+    #[derive(CandidType)]
+    pub struct Stats {
+        pub total_transactions: Nat,
+        pub total_supply: Nat,
+        pub cycles: Nat,
+        pub total_unique_holders: Nat,
     }
+    pub enum TxError {}
+    #[derive(CandidType)]
     pub struct TxEvent {
         pub time: u64,
         pub caller: Principal,
@@ -73,7 +72,6 @@ mod types {
 
 mod ledger {
     use super::*;
-
     thread_local!(
         static LEDGER: RefCell<Ledger> = RefCell::new(Ledger::default());
     );
@@ -92,7 +90,7 @@ mod ledger {
         balances: HashMap<Principal, Nat>,
         allowances: HashMap<Principal, HashMap<Principal, Nat>>,
         used_blocks: HashSet<BlockHeight>,
-        tx_records: VecDeque<TxEvent>,
+        tx_records: Vec<TxEvent>,
     }
 
     impl Ledger {
@@ -124,6 +122,46 @@ mod ledger {
         pub fn metadata_mut(&mut self) -> &mut Metadata {
             &mut self.metadata
         }
+
+        pub fn tx_count(&self) -> usize {
+            self.tx_records.len()
+        }
+
+        pub fn balances_count(&self) -> usize {
+            self.balances.len()
+        }
+
+        pub fn total_balances(&self) -> Nat {
+            self.balances
+                .iter()
+                .map(|(_, v)| v.clone())
+                .reduce(|accumulator, v| accumulator + v)
+                .unwrap_or_else(|| Nat::from(0))
+        }
+
+        pub fn balance_of(&self, owner: &Principal) -> Nat {
+            self.balances
+                .get(owner)
+                .cloned()
+                .unwrap_or_else(|| Nat::from(0))
+        }
+
+        pub fn allowance(&self, owner: &Principal, spender: &Principal) -> Nat {
+            self.allowances
+                .get(owner)
+                .unwrap_or(&HashMap::new())
+                .get(spender)
+                .cloned()
+                .unwrap_or_else(|| Nat::from(0))
+        }
+
+        pub fn get_tx(&self, tx_id: usize) -> Option<&TxEvent> {
+            self.tx_records.get(tx_id)
+        }
+
+        pub fn is_block_used(&self, block_number: &BlockHeight) -> bool {
+            self.used_blocks.contains(block_number)
+        }
     }
 }
 
@@ -144,6 +182,9 @@ fn is_canister_custodian() -> Result<(), String> {
     })
 }
 
+// ====================================================================================================
+// metadata
+// ====================================================================================================
 #[query(name = "metadata", manual_reply = true)]
 #[candid_method(query, rename = "metadata")]
 fn metadata() -> ManualReply<Metadata> {
@@ -246,6 +287,88 @@ fn set_custodians(custodians: HashSet<Principal>) {
 fn set_cap(cap: Principal) {
     ledger::with_mut(|ledger| ledger.metadata_mut().cap = Some(cap))
 }
+
+// ==============================================================================================
+// stats
+// ==============================================================================================
+#[query(name = "totalTransactions")]
+#[candid_method(query, rename = "totalTransactions")]
+fn total_transactions() -> Nat {
+    ledger::with(|ledger| Nat::from(ledger.tx_count()))
+}
+
+#[query(name = "totalSupply")]
+#[candid_method(query, rename = "totalSupply")]
+fn total_supply() -> Nat {
+    ledger::with(|ledger| ledger.total_balances())
+}
+
+#[query(name = "cycles")]
+#[candid_method(query, rename = "cycles")]
+fn cycles() -> Nat {
+    Nat::from(canister_balance128())
+}
+
+#[query(name = "totalUniqueHolders")]
+#[candid_method(query, rename = "totalUniqueHolders")]
+fn total_unique_holders() -> Nat {
+    ledger::with(|ledger| Nat::from(ledger.balances_count()))
+}
+
+#[query(name = "stats")]
+#[candid_method(query, rename = "stats")]
+fn stats() -> Stats {
+    Stats {
+        total_transactions: total_transactions(),
+        total_supply: total_supply(),
+        cycles: cycles(),
+        total_unique_holders: total_unique_holders(),
+    }
+}
+
+// ==================================================================================================
+// balance
+// ==================================================================================================
+#[query(name = "balanceOf")]
+#[candid_method(query, rename = "balanceOf")]
+fn balance_of(owner: Principal) -> Nat {
+    ledger::with(|ledger| ledger.balance_of(&owner))
+}
+
+#[query(name = "allowance")]
+#[candid_method(query, rename = "allowance")]
+fn allowance(owner: Principal, spender: Principal) -> Nat {
+    ledger::with(|ledger| ledger.allowance(&owner, &spender))
+}
+
+// ==================================================================================================
+// transaction history
+// ==================================================================================================
+#[query(name = "transaction", manual_reply = true)]
+#[candid_method(query, rename = "transaction")]
+fn transaction(tx_id: Nat) -> ManualReply<Option<TxEvent>> {
+    ledger::with(|ledger| {
+        ManualReply::one(
+            tx_id
+                .0
+                .to_usize()
+                .and_then(|index| ledger.get_tx(index - 1)),
+        )
+    })
+}
+
+// ==================================================================================================
+// block used
+// ==================================================================================================
+#[query(name = "isBlockUsed")]
+#[candid_method(query, rename = "isBlockUsed")]
+fn is_block_used(block_number: BlockHeight) -> bool {
+    ledger::with(|ledger| ledger.is_block_used(&block_number))
+}
+
+// ==================================================================================================
+// backup
+// ==================================================================================================
 
 #[cfg(any(target_arch = "wasm32", test))]
 fn main() {}
