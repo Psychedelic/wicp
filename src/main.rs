@@ -11,7 +11,7 @@ use ledger_canister::{
     account_identifier::{AccountIdentifier, Subaccount},
     tokens::Tokens,
     tokens::DEFAULT_TRANSFER_FEE,
-    BlockHeight, BlockRes, Memo, Operation, SendArgs,
+    AccountBalanceArgs, BlockHeight, BlockRes, Memo, Operation, SendArgs,
 };
 use num_traits::cast::ToPrimitive;
 use std::cell::RefCell;
@@ -68,6 +68,7 @@ mod types {
         pub total_transactions: Nat,
         pub total_supply: Nat,
         pub cycles: Nat,
+        pub icps: Nat,
         pub total_unique_holders: Nat,
     }
     #[derive(CandidType)]
@@ -451,37 +452,54 @@ fn set_cap(cap: Principal) {
 // ==============================================================================================
 // stats
 // ==============================================================================================
-#[query(name = "totalTransactions")]
+#[query(name = "totalTransactions", guard = "is_canister_custodian")]
 #[candid_method(query, rename = "totalTransactions")]
 fn total_transactions() -> Nat {
     ledger::with(|ledger| Nat::from(ledger.tx_count()))
 }
 
-#[query(name = "totalSupply")]
+#[query(name = "totalSupply", guard = "is_canister_custodian")]
 #[candid_method(query, rename = "totalSupply")]
 fn total_supply() -> Nat {
     ledger::with(|ledger| ledger.total_supply())
 }
 
-#[query(name = "cycles")]
+#[query(name = "cycles", guard = "is_canister_custodian")]
 #[candid_method(query, rename = "cycles")]
 fn cycles() -> Nat {
     Nat::from(canister_balance128())
 }
 
-#[query(name = "totalUniqueHolders")]
+#[query(name = "totalUniqueHolders", guard = "is_canister_custodian")]
 #[candid_method(query, rename = "totalUniqueHolders")]
 fn total_unique_holders() -> Nat {
     ledger::with(|ledger| Nat::from(ledger.balances_count()))
 }
 
-#[query(name = "stats")]
+#[query(name = "icps", guard = "is_canister_custodian")]
+#[candid_method(query, rename = "icps")]
+async fn icps() -> Nat {
+    let tokens = call::<_, (Tokens,)>(
+        Principal::from(CanisterId::get(LEDGER_CANISTER_ID)),
+        "account_balance",
+        (AccountBalanceArgs {
+            account: AccountIdentifier::new(PrincipalId::from(id()), None),
+        },),
+    )
+    .await
+    .unwrap_or((Tokens::ZERO,))
+    .0;
+    Nat::from(tokens.get_e8s())
+}
+
+#[query(name = "stats", guard = "is_canister_custodian")]
 #[candid_method(query, rename = "stats")]
-fn stats() -> Stats {
+async fn stats() -> Stats {
     Stats {
         total_transactions: total_transactions(),
         total_supply: total_supply(),
         cycles: cycles(),
+        icps: icps().await,
         total_unique_holders: total_unique_holders(),
     }
 }
@@ -717,7 +735,7 @@ async fn withdraw(amount: Nat, to: String) -> Result<Nat, TokenError> {
                 "burn".into(),
                 vec![
                     ("to".into(), GenericValue::Principal(caller)),
-                    ("amount".into(), GenericValue::NatContent(Nat::from(amount))),
+                    ("amount".into(), GenericValue::NatContent(amount)),
                 ],
             ))
         })
