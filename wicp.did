@@ -47,6 +47,7 @@ type Metadata = record {
 };
 type Result = variant { Ok : nat; Err : TokenError };
 type Stats = record {
+  icps : nat;
   cycles : nat;
   total_transactions : nat;
   total_unique_holders : nat;
@@ -103,6 +104,7 @@ service : (opt InitArgs) -> {
   decimals : () -> (opt nat8) query;
   fee : () -> (opt nat) query;
   feeTo : () -> (opt principal) query;
+  icps : () -> (nat) query;
   isBlockUsed : (nat64) -> (bool) query;
   logo : () -> (opt text) query;
   metadata : () -> (Metadata) query;

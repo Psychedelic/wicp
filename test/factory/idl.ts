@@ -96,6 +96,7 @@ export const idlFactory = ({ IDL }) => {
     'balances' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat)),
   });
   const Stats = IDL.Record({
+    'icps' : IDL.Nat,
     'cycles' : IDL.Nat,
     'total_transactions' : IDL.Nat,
     'total_unique_holders' : IDL.Nat,
@@ -116,6 +117,7 @@ export const idlFactory = ({ IDL }) => {
     'decimals' : IDL.Func([], [IDL.Opt(IDL.Nat8)], ['query']),
     'fee' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
     'feeTo' : IDL.Func([], [IDL.Opt(IDL.Principal)], ['query']),
+    'icps' : IDL.Func([], [IDL.Nat], ['query']),
     'isBlockUsed' : IDL.Func([IDL.Nat64], [IDL.Bool], ['query']),
     'logo' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
     'metadata' : IDL.Func([], [Metadata], ['query']),

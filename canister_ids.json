@@ -5,5 +5,8 @@
   },
   "wicp_test": {
     "ic": "wjsrf-myaaa-aaaam-qaayq-cai"
+  },
+  "ledger": {
+    "local": "ryjl3-tyaaa-aaaaa-aaaba-cai"
   }
 }

@@ -9,6 +9,11 @@
       "package": "wicp",
       "candid": "wicp.did",
       "type": "rust"
+    },
+    "ledger": {
+      "type": "custom",
+      "wasm": "ledger.wasm",
+      "candid": "ledger.public.did"
     }
   },
   "networks": {

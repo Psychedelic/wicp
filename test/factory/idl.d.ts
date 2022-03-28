@@ -47,6 +47,7 @@ export interface Metadata {
 export type Result = { 'Ok' : bigint } |
   { 'Err' : TokenError };
 export interface Stats {
+  'icps' : bigint,
   'cycles' : bigint,
   'total_transactions' : bigint,
   'total_unique_holders' : bigint,
@@ -101,6 +102,7 @@ export interface _SERVICE {
   'decimals' : () => Promise<[] | [number]>,
   'fee' : () => Promise<[] | [bigint]>,
   'feeTo' : () => Promise<[] | [Principal]>,
+  'icps' : () => Promise<bigint>,
   'isBlockUsed' : (arg_0: bigint) => Promise<boolean>,
   'logo' : () => Promise<[] | [string]>,
   'metadata' : () => Promise<Metadata>,
