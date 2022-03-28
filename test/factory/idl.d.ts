@@ -9,6 +9,7 @@ export type GenericValue = { 'Nat64Content' : bigint } |
   { 'Nat16Content' : number } |
   { 'Int32Content' : number } |
   { 'Int8Content' : number } |
+  { 'FloatContent' : number } |
   { 'Int16Content' : number } |
   { 'BlobContent' : Array<number> } |
   { 'NestedContent' : Vec } |
@@ -25,6 +26,13 @@ export interface InitArgs {
   'symbol' : [] | [string],
 }
 export interface ManualReply {
+  'metadata' : Metadata,
+  'tx_records' : Array<TxEvent>,
+  'allowances' : Array<[Principal, Array<[Principal, bigint]>]>,
+  'used_blocks' : Array<bigint>,
+  'balances' : Array<[Principal, bigint]>,
+}
+export interface Metadata {
   'cap' : [] | [Principal],
   'fee' : [] | [bigint],
   'decimals' : [] | [number],
@@ -36,12 +44,25 @@ export interface ManualReply {
   'custodians' : Array<Principal>,
   'symbol' : [] | [string],
 }
+export type Result = { 'Ok' : bigint } |
+  { 'Err' : TokenError };
 export interface Stats {
   'cycles' : bigint,
   'total_transactions' : bigint,
   'total_unique_holders' : bigint,
   'total_supply' : bigint,
 }
+export type TokenError = { 'InsufficientAllowance' : null } |
+  { 'BlockError' : null } |
+  { 'InsufficientBalance' : null } |
+  { 'TxNotFound' : null } |
+  { 'ErrorOperationStyle' : null } |
+  { 'Unauthorized' : null } |
+  { 'LedgerTrap' : null } |
+  { 'ErrorTo' : null } |
+  { 'Other' : string } |
+  { 'BlockUsed' : null } |
+  { 'AmountTooSmall' : null };
 export interface TxEvent {
   'time' : bigint,
   'operation' : string,
@@ -61,6 +82,7 @@ export type Vec = Array<
       { 'Nat16Content' : number } |
       { 'Int32Content' : number } |
       { 'Int8Content' : number } |
+      { 'FloatContent' : number } |
       { 'Int16Content' : number } |
       { 'BlobContent' : Array<number> } |
       { 'NestedContent' : Vec } |
@@ -70,6 +92,8 @@ export type Vec = Array<
 >;
 export interface _SERVICE {
   'allowance' : (arg_0: Principal, arg_1: Principal) => Promise<bigint>,
+  'approve' : (arg_0: Principal, arg_1: bigint) => Promise<Result>,
+  'backup' : () => Promise<ManualReply>,
   'balanceOf' : (arg_0: Principal) => Promise<bigint>,
   'cap' : () => Promise<[] | [Principal]>,
   'custodians' : () => Promise<Array<Principal>>,
@@ -79,7 +103,8 @@ export interface _SERVICE {
   'feeTo' : () => Promise<[] | [Principal]>,
   'isBlockUsed' : (arg_0: bigint) => Promise<boolean>,
   'logo' : () => Promise<[] | [string]>,
-  'metadata' : () => Promise<ManualReply>,
+  'metadata' : () => Promise<Metadata>,
+  'mint' : (arg_0: [] | [Array<number>], arg_1: bigint) => Promise<Result>,
   'name' : () => Promise<[] | [string]>,
   'setCap' : (arg_0: Principal) => Promise<undefined>,
   'setCustodians' : (arg_0: Array<Principal>) => Promise<undefined>,
@@ -95,4 +120,11 @@ export interface _SERVICE {
   'totalTransactions' : () => Promise<bigint>,
   'totalUniqueHolders' : () => Promise<bigint>,
   'transaction' : (arg_0: bigint) => Promise<[] | [TxEvent]>,
+  'transfer' : (arg_0: Principal, arg_1: bigint) => Promise<Result>,
+  'transferFrom' : (
+      arg_0: Principal,
+      arg_1: Principal,
+      arg_2: bigint,
+    ) => Promise<Result>,
+  'withdraw' : (arg_0: bigint, arg_1: string) => Promise<Result>,
 }

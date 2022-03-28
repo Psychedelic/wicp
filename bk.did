@@ -38,10 +38,32 @@ service : (
   principal,
   principal,
 ) -> {
+  allowance : (principal, principal) -> (nat) query;
   approve : (principal, nat) -> (Result);
+  balanceOf : (principal) -> (nat) query;
+  decimals : () -> (nat8) query;
+  getAllowanceSize : () -> (nat64) query;
+  getBlockUsed : () -> (vec nat64) query;
+  getHolders : (nat64, nat64) -> (vec record { principal; nat }) query;
+  getMetadata : () -> (Metadata) query;
+  getTokenInfo : () -> (TokenInfo) query;
+  getUserApprovals : (principal) -> (vec record { principal; nat }) query;
+  historySize : () -> (nat64) query;
+  isBlockUsed : (nat64) -> (bool) query;
+  logo : () -> (text) query;
   mint : (opt vec nat8, nat64) -> (Result);
+  mintFor : (opt vec nat8, nat64, principal) -> (Result);
+  name : () -> (text) query;
+  owner : () -> (principal) query;
+  setFee : (nat) -> ();
+  setFeeTo : (principal) -> ();
+  setGenesis : () -> (Result);
+  setLogo : (text) -> ();
+  setName : (text) -> ();
+  setOwner : (principal) -> ();
+  symbol : () -> (text) query;
+  totalSupply : () -> (nat) query;
   transfer : (principal, nat) -> (Result);
   transferFrom : (principal, principal, nat) -> (Result);
   withdraw : (nat64, text) -> (Result);
 }
-

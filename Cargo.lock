@@ -2007,6 +2007,7 @@ dependencies = [
  "dfn_protobuf",
  "ic-cdk",
  "ic-cdk-macros",
+ "ic-nns-constants",
  "ic-types 0.8.0",
  "ledger-canister",
  "num-traits",

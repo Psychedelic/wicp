@@ -9,6 +9,7 @@ type GenericValue = variant {
   Nat16Content : nat16;
   Int32Content : int32;
   Int8Content : int8;
+  FloatContent : float64;
   Int16Content : int16;
   BlobContent : vec nat8;
   NestedContent : Vec;
@@ -26,6 +27,13 @@ type InitArgs = record {
   symbol : opt text;
 };
 type ManualReply = record {
+  metadata : Metadata;
+  tx_records : vec TxEvent;
+  allowances : vec record { principal; vec record { principal; nat } };
+  used_blocks : vec nat64;
+  balances : vec record { principal; nat };
+};
+type Metadata = record {
   cap : opt principal;
   fee : opt nat;
   decimals : opt nat8;
@@ -37,11 +45,25 @@ type ManualReply = record {
   custodians : vec principal;
   symbol : opt text;
 };
+type Result = variant { Ok : nat; Err : TokenError };
 type Stats = record {
   cycles : nat;
   total_transactions : nat;
   total_unique_holders : nat;
   total_supply : nat;
+};
+type TokenError = variant {
+  InsufficientAllowance;
+  BlockError;
+  InsufficientBalance;
+  TxNotFound;
+  ErrorOperationStyle;
+  Unauthorized;
+  LedgerTrap;
+  ErrorTo;
+  Other : text;
+  BlockUsed;
+  AmountTooSmall;
 };
 type TxEvent = record {
   time : nat64;
@@ -62,6 +84,7 @@ type Vec = vec record {
     Nat16Content : nat16;
     Int32Content : int32;
     Int8Content : int8;
+    FloatContent : float64;
     Int16Content : int16;
     BlobContent : vec nat8;
     NestedContent : Vec;
@@ -71,6 +94,8 @@ type Vec = vec record {
 };
 service : (opt InitArgs) -> {
   allowance : (principal, principal) -> (nat) query;
+  approve : (principal, nat) -> (Result);
+  backup : () -> (ManualReply) query;
   balanceOf : (principal) -> (nat) query;
   cap : () -> (opt principal) query;
   custodians : () -> (vec principal) query;
@@ -80,7 +105,8 @@ service : (opt InitArgs) -> {
   feeTo : () -> (opt principal) query;
   isBlockUsed : (nat64) -> (bool) query;
   logo : () -> (opt text) query;
-  metadata : () -> (ManualReply) query;
+  metadata : () -> (Metadata) query;
+  mint : (opt vec nat8, nat64) -> (Result);
   name : () -> (opt text) query;
   setCap : (principal) -> ();
   setCustodians : (vec principal) -> ();
@@ -96,4 +122,7 @@ service : (opt InitArgs) -> {
   totalTransactions : () -> (nat) query;
   totalUniqueHolders : () -> (nat) query;
   transaction : (nat) -> (opt TxEvent) query;
+  transfer : (principal, nat) -> (Result);
+  transferFrom : (principal, principal, nat) -> (Result);
+  withdraw : (nat, text) -> (Result);
 }
