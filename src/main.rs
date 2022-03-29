@@ -483,6 +483,7 @@ async fn icps() -> Nat {
         Principal::from(CanisterId::get(LEDGER_CANISTER_ID)),
         "account_balance",
         (AccountBalanceArgs {
+            // FIXME: can't get icp balance
             account: AccountIdentifier::new(PrincipalId::from(id()), None),
         },),
     )

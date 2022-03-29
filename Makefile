@@ -1,6 +1,7 @@
 .PHONY: init candid build setup-ledger local stop-replica test format lint clean
 
 LOCAL_CUSTODIAN_PRINCIPAL=$(shell dfx identity get-principal)
+LOCAL_LEDGER_ACCOUNT_ID=$(shell dfx ledger account-id)
 TEST_CUSTODIAN_PRINCIPAL=$(shell cat test/custodian-test-principal)
 TEST_MINTER_ACCOUNT_ID=$(shell cat test/minter-test-account-id)
 TEST_LEDGER_ACCOUNT_ID=$(shell cat test/ledger-test-account-id)
@@ -11,15 +12,18 @@ init:
 	npm --prefix test i
 	cargo check
 	curl -o ledger.wasm.gz https://download.dfinity.systems/ic/${IC_VERSION}/canisters/ledger-canister_notify-method.wasm.gz
-	gunzip ledger.wasm.gz
+	gunzip -f ledger.wasm.gz
 	curl -o ledger.private.did https://raw.githubusercontent.com/dfinity/ic/${IC_VERSION}/rs/rosetta-api/ledger.did
 	curl -o ledger.public.did https://raw.githubusercontent.com/dfinity/ic/${IC_VERSION}/rs/rosetta-api/ledger_canister/ledger.did
 
 candid:
 	cargo run > wicp.did
-	didc bind -t ts wicp.did > test/factory/idl.d.ts
-	echo "// @ts-nocheck" > test/factory/idl.ts
-	didc bind -t js wicp.did >> test/factory/idl.ts
+	didc bind -t ts wicp.did > test/factory/wicp_idl.d.ts
+	echo "// @ts-nocheck" > test/factory/wicp_idl.ts
+	didc bind -t js wicp.did >> test/factory/wicp_idl.ts
+	didc bind -t ts ledger.public.did > test/factory/ledger_idl.d.ts
+	echo "// @ts-nocheck" > test/factory/ledger_idl.ts
+	didc bind -t js ledger.public.did >> test/factory/ledger_idl.ts
 
 build: candid
 	dfx ping local || dfx start --clean --background
@@ -28,7 +32,7 @@ build: candid
 
 setup-ledger: build
 	jq '.canisters.ledger={"type":"custom","wasm":"ledger.wasm","candid":"ledger.private.did"}' < dfx.json | sponge dfx.json
-	dfx deploy ledger --argument '(record{minting_account="'$(TEST_MINTER_ACCOUNT_ID)'";initial_values=vec{record{"'$(TEST_LEDGER_ACCOUNT_ID)'";record{e8s=100_000_000_000}};};send_whitelist=vec{}})'
+	dfx deploy ledger --argument '(record{minting_account="'$(TEST_MINTER_ACCOUNT_ID)'";initial_values=vec{record{"'$(TEST_LEDGER_ACCOUNT_ID)'";record{e8s=100_000_000_000}};record{"'$(LOCAL_LEDGER_ACCOUNT_ID)'";record{e8s=100_000_000_000}}};send_whitelist=vec{}})'
 	jq '.canisters.ledger.candid="ledger.public.did"' < dfx.json | sponge dfx.json
 
 local: setup-ledger
