@@ -709,6 +709,10 @@ async fn withdraw(amount: Nat, to: String) -> Result<Nat, TokenError> {
         .ge(&amount)
         .then(|| ())
         .ok_or(TokenError::InsufficientBalance)?;
+    total_supply()
+        .ge(&amount)
+        .then(|| ())
+        .ok_or(TokenError::InsufficientBalance)?;
     let args = SendArgs {
         memo: Memo(0),
         amount: (Tokens::from_e8s(amount_e8s) - DEFAULT_TRANSFER_FEE).unwrap(),
