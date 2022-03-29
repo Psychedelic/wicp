@@ -12,8 +12,7 @@
       "type": "ephemeral"
     },
     "fleek-testnet": {
-      "bind": "34.216.56.80:8080",
-      "type": "ephemeral"
+      "bind": "34.216.56.80:8080"
     }
   },
   "version": 1
