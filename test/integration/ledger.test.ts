@@ -1,20 +1,29 @@
 import {
   aliceAccountId,
-  aliceActor,
+  aliceIdentity,
+  aliceLedgerActor,
+  aliceWicpActor,
   bobAccountId,
-  bobActor,
+  bobIdentity,
+  bobLedgerActor,
+  bobWicpActor,
   custodianAccountId,
-  custodianActor,
+  custodianIdentity,
+  custodianWicpActor,
   johnAccountId,
-  johnActor,
+  johnIdentity,
+  johnWicpActor,
   ledgerAccountId,
   ledgerActor,
-  minterAccountId
+  ledgerIdentity,
+  minterAccountId,
+  minterIdentity,
+  wicpAccountId
 } from "../setup";
 import test from "ava";
 
-const normalActors = [aliceActor, bobActor, johnActor];
-// const allActors = [...normalActors, custodianActor];
+const normalActors = [aliceWicpActor, bobWicpActor, johnWicpActor];
+const allActors = [...normalActors, custodianWicpActor];
 
 test.serial("transfer ICP success", async t => {
   t.deepEqual(
@@ -78,21 +87,85 @@ test.serial("transfer ICP success", async t => {
 });
 
 test.serial("verify initial stats", async t => {
-  const result = await custodianActor.stats();
+  const result = await custodianWicpActor.stats();
   t.truthy(result.cycles);
   t.is(result.icps, BigInt(0));
   t.is(result.total_supply, BigInt(0));
   t.is(result.total_transactions, BigInt(0));
   t.is(result.total_unique_holders, BigInt(0));
-  t.truthy(await custodianActor.cycles());
-  t.is(await custodianActor.icps(), BigInt(0));
-  t.is(await custodianActor.totalSupply(), BigInt(0));
-  t.is(await custodianActor.totalTransactions(), BigInt(0));
-  t.is(await custodianActor.totalUniqueHolders(), BigInt(0));
+  t.truthy(await custodianWicpActor.cycles());
+  t.is(await custodianWicpActor.icps(), BigInt(0));
+  t.is(await custodianWicpActor.totalSupply(), BigInt(0));
+  t.is(await custodianWicpActor.totalTransactions(), BigInt(0));
+  t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(0));
 });
 
 test.serial("only custody can query stats", async t => {
   (await Promise.allSettled(normalActors.map(actor => actor.stats()))).forEach(promise => {
     t.is(promise.status, "rejected");
   });
+});
+
+test.serial("verify initial balance", async t => {
+  (await Promise.all(allActors.map(actor => actor.balanceOf(ledgerIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(minterIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(aliceIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(bobIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(johnIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(custodianIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+});
+
+test.serial("verify transfer icp to wicp canister", async t => {
+  t.deepEqual(
+    await aliceLedgerActor.transfer({
+      to: Array.from(Buffer.from(wicpAccountId.toHex(), "hex")),
+      fee: {e8s: BigInt(10_000)},
+      amount: {e8s: BigInt(50_000_000_000)},
+      memo: BigInt(0),
+      from_subaccount: [],
+      created_at_time: []
+    }),
+    {Ok: BigInt(4)}
+  );
+  t.deepEqual(
+    await bobLedgerActor.transfer({
+      to: Array.from(Buffer.from(wicpAccountId.toHex(), "hex")),
+      fee: {e8s: BigInt(10_000)},
+      amount: {e8s: BigInt(20_000_000_000)},
+      memo: BigInt(0),
+      from_subaccount: [],
+      created_at_time: []
+    }),
+    {Ok: BigInt(5)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(wicpAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(70_000_000_000)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(aliceAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(19_999_990_000)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(bobAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(9_999_970_000)}
+  );
 });

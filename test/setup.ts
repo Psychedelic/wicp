@@ -2,6 +2,7 @@ import {Actor, HttpAgent, Identity} from "@dfinity/agent";
 import {AccountIdentifier} from "@dfinity/nns";
 import {Ed25519KeyIdentity} from "@dfinity/identity";
 import {_SERVICE as LedgerService} from "./factory/ledger_idl.d";
+import {Principal} from "@dfinity/principal";
 import {_SERVICE as WicpService} from "./factory/wicp_idl.d";
 import fetch from "isomorphic-fetch";
 import {idlFactory as ledgerIdlFactory} from "./factory/ledger_idl";
@@ -63,13 +64,22 @@ const createActor = async (identity: Identity, type: string): Promise<WicpServic
   return actor;
 };
 
-export const aliceActor = (await createActor(aliceIdentity, "wicp")) as WicpService;
-export const bobActor = (await createActor(bobIdentity, "wicp")) as WicpService;
-export const johnActor = (await createActor(johnIdentity, "wicp")) as WicpService;
-export const custodianActor = (await createActor(custodianIdentity, "wicp")) as WicpService;
+export const aliceWicpActor = (await createActor(aliceIdentity, "wicp")) as WicpService;
+export const bobWicpActor = (await createActor(bobIdentity, "wicp")) as WicpService;
+export const johnWicpActor = (await createActor(johnIdentity, "wicp")) as WicpService;
+export const custodianWicpActor = (await createActor(custodianIdentity, "wicp")) as WicpService;
+
 export const ledgerActor = (await createActor(ledgerIdentity, "ledger")) as LedgerService;
 export const minterActor = (await createActor(minterIdentity, "ledger")) as LedgerService;
 
+export const aliceLedgerActor = (await createActor(aliceIdentity, "ledger")) as LedgerService;
+export const bobLedgerActor = (await createActor(bobIdentity, "ledger")) as LedgerService;
+export const johnLedgerActor = (await createActor(johnIdentity, "ledger")) as LedgerService;
+export const custodianLedgerActor = (await createActor(custodianIdentity, "ledger")) as LedgerService;
+
+export const wicpAccountId = AccountIdentifier.fromPrincipal({
+  principal: Principal.fromText(canisterIds["wicp"].local)
+});
 export const aliceAccountId = AccountIdentifier.fromPrincipal({principal: aliceIdentity.getPrincipal()});
 export const bobAccountId = AccountIdentifier.fromPrincipal({principal: bobIdentity.getPrincipal()});
 export const johnAccountId = AccountIdentifier.fromPrincipal({principal: johnIdentity.getPrincipal()});

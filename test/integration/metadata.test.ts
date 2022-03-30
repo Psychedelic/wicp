@@ -1,44 +1,51 @@
-import {aliceActor, aliceIdentity, bobActor, custodianActor, custodianIdentity, johnActor} from "../setup";
+import {
+  aliceIdentity,
+  aliceWicpActor,
+  bobWicpActor,
+  custodianIdentity,
+  custodianWicpActor,
+  johnWicpActor
+} from "../setup";
 import test, {Assertions} from "ava";
 import {Principal} from "@dfinity/principal";
 
-const normalActors = [aliceActor, bobActor, johnActor];
-const allActors = [...normalActors, custodianActor];
-const cap = Principal.fromText("rrkah-fqaaa-aaaaa-aaaaq-cai");
+const normalActors = [aliceWicpActor, bobWicpActor, johnWicpActor];
+const allActors = [...normalActors, custodianWicpActor];
+const cap = Principal.fromText("rrkah-fqaaa-aaaaa-aaaaq-cai"); // just an example
 
 const testName = async (t: Assertions) => {
   (await Promise.all(allActors.map(actor => actor.name()))).forEach(result => t.deepEqual(result, []));
-  await t.notThrowsAsync(custodianActor.setName("wicp"));
+  await t.notThrowsAsync(custodianWicpActor.setName("wicp"));
   (await Promise.all(allActors.map(actor => actor.name()))).forEach(result => t.deepEqual(result, ["wicp"]));
 };
 
 const testLogo = async (t: Assertions) => {
   (await Promise.all(allActors.map(actor => actor.logo()))).forEach(result => t.deepEqual(result, []));
-  await t.notThrowsAsync(custodianActor.setLogo("wicpLogo"));
+  await t.notThrowsAsync(custodianWicpActor.setLogo("wicpLogo"));
   (await Promise.all(allActors.map(actor => actor.logo()))).forEach(result => t.deepEqual(result, ["wicpLogo"]));
 };
 
 const testSymbol = async (t: Assertions) => {
   (await Promise.all(allActors.map(actor => actor.symbol()))).forEach(result => t.deepEqual(result, []));
-  await t.notThrowsAsync(custodianActor.setSymbol("wicpSymbol"));
+  await t.notThrowsAsync(custodianWicpActor.setSymbol("wicpSymbol"));
   (await Promise.all(allActors.map(actor => actor.symbol()))).forEach(result => t.deepEqual(result, ["wicpSymbol"]));
 };
 
 const testDecimals = async (t: Assertions) => {
   (await Promise.all(allActors.map(actor => actor.decimals()))).forEach(result => t.deepEqual(result, []));
-  await t.notThrowsAsync(custodianActor.setDecimals(99));
+  await t.notThrowsAsync(custodianWicpActor.setDecimals(99));
   (await Promise.all(allActors.map(actor => actor.decimals()))).forEach(result => t.deepEqual(result, [99]));
 };
 
 const testFee = async (t: Assertions) => {
   (await Promise.all(allActors.map(actor => actor.fee()))).forEach(result => t.deepEqual(result, []));
-  await t.notThrowsAsync(custodianActor.setFee(BigInt(1_000_000)));
+  await t.notThrowsAsync(custodianWicpActor.setFee(BigInt(1_000_000)));
   (await Promise.all(allActors.map(actor => actor.fee()))).forEach(result => t.deepEqual(result, [BigInt(1_000_000)]));
 };
 
 const testFeeTo = async (t: Assertions) => {
   (await Promise.all(allActors.map(actor => actor.feeTo()))).forEach(result => t.deepEqual(result, []));
-  await t.notThrowsAsync(custodianActor.setFeeTo(aliceIdentity.getPrincipal()));
+  await t.notThrowsAsync(custodianWicpActor.setFeeTo(aliceIdentity.getPrincipal()));
   (await Promise.all(allActors.map(actor => actor.feeTo()))).forEach(result =>
     t.deepEqual(result, [aliceIdentity.getPrincipal()])
   );
@@ -46,7 +53,7 @@ const testFeeTo = async (t: Assertions) => {
 
 const testCap = async (t: Assertions) => {
   (await Promise.all(allActors.map(actor => actor.cap()))).forEach(result => t.deepEqual(result, []));
-  await t.notThrowsAsync(custodianActor.setCap(cap));
+  await t.notThrowsAsync(custodianWicpActor.setCap(cap));
   (await Promise.all(allActors.map(actor => actor.cap()))).forEach(result => t.deepEqual(result, [cap]));
 };
 
@@ -55,7 +62,7 @@ const testCustodians = async (t: Assertions) => {
     t.is(result.filter(custodians => custodians.toText() === custodianIdentity.getPrincipal().toText()).length, 1)
   );
   await t.notThrowsAsync(
-    custodianActor.setCustodians([custodianIdentity.getPrincipal(), custodianIdentity.getPrincipal()])
+    custodianWicpActor.setCustodians([custodianIdentity.getPrincipal(), custodianIdentity.getPrincipal()])
   );
   (await Promise.all(allActors.map(actor => actor.custodians()))).forEach(result =>
     t.deepEqual(result, [custodianIdentity.getPrincipal()])
