@@ -1,9 +1,10 @@
 {
   "canisters": {
     "wicp": {
-      "package": "wicp",
+      "build": "./build.sh",
       "candid": "wicp/wicp.did",
-      "type": "rust"
+      "wasm": "target/wasm32-unknown-unknown/release/wicp-opt.wasm",
+      "type": "custom"
     }
   },
   "networks": {
