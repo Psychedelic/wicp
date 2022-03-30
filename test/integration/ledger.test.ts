@@ -170,6 +170,12 @@ test.serial("transfer ICP to WICP canister", async t => {
   );
 });
 
+test.serial("error on mint invalid operation", async t => {
+  (await Promise.all(allActors.map(actor => actor.mint([], BigInt(1))))).forEach(result =>
+    t.deepEqual(result, {Err: {ErrorOperationStyle: null}})
+  );
+});
+
 test.serial("error on mint invalid block", async t => {
   (await Promise.all(allActors.map(actor => actor.mint([], BigInt(6))))).forEach(result =>
     t.deepEqual(result, {Err: {BlockError: null}})
@@ -187,6 +193,64 @@ test.serial("error on mint unauthorize `from`", async t => {
       custodianWicpActor.mint([], BigInt(5))
     ])
   ).forEach(result => t.deepEqual(result, {Err: {Unauthorized: null}}));
+});
+
+test.serial("transfer ICP from alice to john", async t => {
+  t.deepEqual(
+    await aliceLedgerActor.transfer({
+      to: Array.from(Buffer.from(johnAccountId.toHex(), "hex")),
+      fee: {e8s: BigInt(10_000)},
+      amount: {e8s: BigInt(9_999_980_000)},
+      memo: BigInt(0),
+      from_subaccount: [],
+      created_at_time: []
+    }),
+    {Ok: BigInt(6)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(aliceAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(10_000_000_000)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(johnAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(9_999_980_000)}
+  );
+});
+
+test.serial("transfer ICP from bob to john", async t => {
+  t.deepEqual(
+    await bobLedgerActor.transfer({
+      to: Array.from(Buffer.from(johnAccountId.toHex(), "hex")),
+      fee: {e8s: BigInt(10_000)},
+      amount: {e8s: BigInt(999_960_000)},
+      memo: BigInt(0),
+      from_subaccount: [],
+      created_at_time: []
+    }),
+    {Ok: BigInt(7)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(bobAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(9_000_000_000)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(johnAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(10_999_940_000)}
+  );
+});
+
+test.serial("error on mint unauthorize `to`", async t => {
+  (await Promise.all([aliceWicpActor.mint([], BigInt(6)), bobWicpActor.mint([], BigInt(7))])).forEach(result =>
+    t.deepEqual(result, {Err: {ErrorTo: null}})
+  );
 });
 
 test.serial("mint WICP", async t => {
