@@ -127,7 +127,7 @@ test.serial("verify initial balance", async t => {
   });
 });
 
-test.serial("verify transfer icp to wicp canister", async t => {
+test.serial("transfer ICP to WICP canister", async t => {
   t.deepEqual(
     await aliceLedgerActor.transfer({
       to: Array.from(Buffer.from(wicpAccountId.toHex(), "hex")),
@@ -168,4 +168,23 @@ test.serial("verify transfer icp to wicp canister", async t => {
     }),
     {e8s: BigInt(9_999_970_000)}
   );
+});
+
+test.serial("mint WICP", async t => {
+  const result = await Promise.all([
+    aliceWicpActor.mint([], BigInt(4)),
+    aliceWicpActor.mint([], BigInt(4)),
+    aliceWicpActor.mint([], BigInt(4)),
+    aliceWicpActor.mint([], BigInt(4)),
+    aliceWicpActor.mint([], BigInt(4))
+  ]);
+  const ok = result.filter(r => "Ok" in r);
+  const err = result.filter(r => "Err" in r);
+  t.is(ok.length, 1);
+  t.is(err.length, 4);
+  t.deepEqual(ok[0], {Ok: BigInt(1)});
+  t.deepEqual(err[0], {Err: {BlockUsed: null}});
+  t.deepEqual(err[1], {Err: {BlockUsed: null}});
+  t.deepEqual(err[2], {Err: {BlockUsed: null}});
+  t.deepEqual(err[3], {Err: {BlockUsed: null}});
 });

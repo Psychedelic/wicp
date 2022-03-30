@@ -1,4 +1,4 @@
-import {Actor, HttpAgent, Identity} from "@dfinity/agent";
+import {Actor, HttpAgent, Identity, Nonce, makeNonceTransform} from "@dfinity/agent";
 import {AccountIdentifier} from "@dfinity/nns";
 import {Ed25519KeyIdentity} from "@dfinity/identity";
 import {_SERVICE as LedgerService} from "./factory/ledger_idl.d";
@@ -30,12 +30,29 @@ export const minterIdentity = Ed25519KeyIdentity.fromSecretKey(Buffer.from(minte
 
 const canisterIds = JSON.parse(readFileSync("../canister_ids.json", {encoding: "utf8"}));
 
+// TODO: migrate into v0.10.5
+const makeNonce = () => {
+  // Encode 128 bits.
+  const buffer = new ArrayBuffer(16);
+  const view = new DataView(buffer);
+  const now = BigInt(+Date.now());
+  const randHi = Math.floor(Math.random() * 0xffffffff);
+  const randLo = Math.floor(Math.random() * 0xffffffff);
+  view.setBigUint64(0, now);
+  view.setUint32(8, randHi);
+  view.setUint32(12, randLo);
+  return buffer as Nonce;
+};
+
 const createActor = async (identity: Identity, type: string): Promise<WicpService | LedgerService> => {
   const agent = new HttpAgent({
     host: "http://127.0.0.1:8000",
     fetch,
     identity
   });
+
+  // https://forum.dfinity.org/t/calling-a-counter-multiple-times-asynchronously-with-promise-all-gives-the-same-value-each-time/11618/4
+  agent.addTransform(makeNonceTransform(makeNonce));
 
   let actor;
   switch (type) {

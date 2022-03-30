@@ -655,6 +655,7 @@ async fn mint(
         .not()
         .then(|| ())
         .ok_or(TokenError::BlockUsed)?;
+    let caller = caller();
     let (from, to, amount) = ledger::get_block_info(block_height).await?;
     ledger::with_mut(|ledger| {
         // guarding state
@@ -664,7 +665,6 @@ async fn mint(
             .then(|| ())
             .ok_or(TokenError::BlockUsed)?;
         ledger.set_block_used(block_height);
-        let caller = caller();
         let caller_account = AccountIdentifier::new(PrincipalId::from(caller), sub_account);
         let wicp_account = AccountIdentifier::new(PrincipalId::from(id()), None);
         caller_account.eq(&from).then(|| ()).ok_or_else(|| {
