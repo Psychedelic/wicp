@@ -1,17 +1,16 @@
 import {
+  aliceAccountId,
   aliceActor,
-  aliceIdentity,
+  bobAccountId,
   bobActor,
-  bobIdentity,
+  custodianAccountId,
   custodianActor,
-  custodianIdentity,
+  johnAccountId,
   johnActor,
-  johnIdentity,
+  ledgerAccountId,
   ledgerActor,
-  ledgerIdentity,
-  minterIdentity
+  minterAccountId
 } from "../setup";
-import {AccountIdentifier} from "@dfinity/nns";
 import test from "ava";
 
 const normalActors = [aliceActor, bobActor, johnActor];
@@ -20,9 +19,7 @@ const normalActors = [aliceActor, bobActor, johnActor];
 test.serial("transfer ICP success", async t => {
   t.deepEqual(
     await ledgerActor.transfer({
-      to: Array.from(
-        Buffer.from(AccountIdentifier.fromPrincipal({principal: aliceIdentity.getPrincipal()}).toHex(), "hex")
-      ),
+      to: Array.from(Buffer.from(aliceAccountId.toHex(), "hex")),
       fee: {e8s: BigInt(10_000)},
       amount: {e8s: BigInt(70_000_000_000)},
       memo: BigInt(0),
@@ -33,9 +30,7 @@ test.serial("transfer ICP success", async t => {
   );
   t.deepEqual(
     await ledgerActor.transfer({
-      to: Array.from(
-        Buffer.from(AccountIdentifier.fromPrincipal({principal: bobIdentity.getPrincipal()}).toHex(), "hex")
-      ),
+      to: Array.from(Buffer.from(bobAccountId.toHex(), "hex")),
       fee: {e8s: BigInt(10_000)},
       amount: {e8s: BigInt(29_999_980_000)},
       memo: BigInt(0),
@@ -46,49 +41,37 @@ test.serial("transfer ICP success", async t => {
   );
   t.deepEqual(
     await ledgerActor.account_balance({
-      account: Array.from(
-        Buffer.from(AccountIdentifier.fromPrincipal({principal: ledgerIdentity.getPrincipal()}).toHex(), "hex")
-      )
+      account: Array.from(Buffer.from(ledgerAccountId.toHex(), "hex"))
     }),
     {e8s: BigInt(0)}
   );
   t.deepEqual(
     await ledgerActor.account_balance({
-      account: Array.from(
-        Buffer.from(AccountIdentifier.fromPrincipal({principal: minterIdentity.getPrincipal()}).toHex(), "hex")
-      )
+      account: Array.from(Buffer.from(minterAccountId.toHex(), "hex"))
     }),
     {e8s: BigInt(0)}
   );
   t.deepEqual(
     await ledgerActor.account_balance({
-      account: Array.from(
-        Buffer.from(AccountIdentifier.fromPrincipal({principal: aliceIdentity.getPrincipal()}).toHex(), "hex")
-      )
+      account: Array.from(Buffer.from(aliceAccountId.toHex(), "hex"))
     }),
     {e8s: BigInt(70_000_000_000)}
   );
   t.deepEqual(
     await ledgerActor.account_balance({
-      account: Array.from(
-        Buffer.from(AccountIdentifier.fromPrincipal({principal: bobIdentity.getPrincipal()}).toHex(), "hex")
-      )
+      account: Array.from(Buffer.from(bobAccountId.toHex(), "hex"))
     }),
     {e8s: BigInt(29_999_980_000)}
   );
   t.deepEqual(
     await ledgerActor.account_balance({
-      account: Array.from(
-        Buffer.from(AccountIdentifier.fromPrincipal({principal: johnIdentity.getPrincipal()}).toHex(), "hex")
-      )
+      account: Array.from(Buffer.from(johnAccountId.toHex(), "hex"))
     }),
     {e8s: BigInt(0)}
   );
   t.deepEqual(
     await ledgerActor.account_balance({
-      account: Array.from(
-        Buffer.from(AccountIdentifier.fromPrincipal({principal: custodianIdentity.getPrincipal()}).toHex(), "hex")
-      )
+      account: Array.from(Buffer.from(custodianAccountId.toHex(), "hex"))
     }),
     {e8s: BigInt(0)}
   );

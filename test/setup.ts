@@ -1,4 +1,5 @@
 import {Actor, HttpAgent, Identity} from "@dfinity/agent";
+import {AccountIdentifier} from "@dfinity/nns";
 import {Ed25519KeyIdentity} from "@dfinity/identity";
 import {_SERVICE as LedgerService} from "./factory/ledger_idl.d";
 import {_SERVICE as WicpService} from "./factory/wicp_idl.d";
@@ -65,8 +66,13 @@ const createActor = async (identity: Identity, type: string): Promise<WicpServic
 export const aliceActor = (await createActor(aliceIdentity, "wicp")) as WicpService;
 export const bobActor = (await createActor(bobIdentity, "wicp")) as WicpService;
 export const johnActor = (await createActor(johnIdentity, "wicp")) as WicpService;
-
 export const custodianActor = (await createActor(custodianIdentity, "wicp")) as WicpService;
-
 export const ledgerActor = (await createActor(ledgerIdentity, "ledger")) as LedgerService;
 export const minterActor = (await createActor(minterIdentity, "ledger")) as LedgerService;
+
+export const aliceAccountId = AccountIdentifier.fromPrincipal({principal: aliceIdentity.getPrincipal()});
+export const bobAccountId = AccountIdentifier.fromPrincipal({principal: bobIdentity.getPrincipal()});
+export const johnAccountId = AccountIdentifier.fromPrincipal({principal: johnIdentity.getPrincipal()});
+export const custodianAccountId = AccountIdentifier.fromPrincipal({principal: custodianIdentity.getPrincipal()});
+export const ledgerAccountId = AccountIdentifier.fromPrincipal({principal: ledgerIdentity.getPrincipal()});
+export const minterAccountId = AccountIdentifier.fromPrincipal({principal: minterIdentity.getPrincipal()});
