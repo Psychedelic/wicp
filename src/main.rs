@@ -11,7 +11,7 @@ use ledger_canister::{
     account_identifier::{AccountIdentifier, Subaccount},
     tokens::Tokens,
     tokens::DEFAULT_TRANSFER_FEE,
-    AccountBalanceArgs, BlockHeight, BlockRes, Memo, Operation, SendArgs,
+    BinaryAccountBalanceArgs, BlockHeight, BlockRes, Memo, Operation, SendArgs,
 };
 use num_traits::cast::ToPrimitive;
 use std::cell::RefCell;
@@ -482,13 +482,12 @@ async fn icps() -> Nat {
     let tokens = call::<_, (Tokens,)>(
         Principal::from(CanisterId::get(LEDGER_CANISTER_ID)),
         "account_balance",
-        (AccountBalanceArgs {
-            // FIXME: can't get icp balance
-            account: AccountIdentifier::new(PrincipalId::from(id()), None),
+        (BinaryAccountBalanceArgs {
+            account: AccountIdentifier::new(PrincipalId::from(id()), None).to_address(),
         },),
     )
     .await
-    .unwrap_or((Tokens::ZERO,))
+    .unwrap() // should crash if query failed
     .0;
     Nat::from(tokens.get_e8s())
 }
@@ -658,6 +657,7 @@ async fn mint(
         .ok_or(TokenError::BlockUsed)?;
     let (from, to, amount) = ledger::get_block_info(block_height).await?;
     ledger::with_mut(|ledger| {
+        // guarding state
         ledger
             .is_block_used(&block_height)
             .not()
