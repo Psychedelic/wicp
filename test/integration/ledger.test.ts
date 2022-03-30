@@ -170,21 +170,76 @@ test.serial("transfer ICP to WICP canister", async t => {
   );
 });
 
+test.serial("error on mint invalid block", async t => {
+  (await Promise.all(allActors.map(actor => actor.mint([], BigInt(6))))).forEach(result =>
+    t.deepEqual(result, {Err: {BlockError: null}})
+  );
+});
+
+test.serial("error on mint unauthorize `from`", async t => {
+  (
+    await Promise.all([
+      aliceWicpActor.mint([], BigInt(2)),
+      aliceWicpActor.mint([], BigInt(5)),
+      bobWicpActor.mint([], BigInt(3)),
+      bobWicpActor.mint([], BigInt(4)),
+      johnWicpActor.mint([], BigInt(4)),
+      custodianWicpActor.mint([], BigInt(5))
+    ])
+  ).forEach(result => t.deepEqual(result, {Err: {Unauthorized: null}}));
+});
+
 test.serial("mint WICP", async t => {
-  const result = await Promise.all([
+  // alice mint
+  const result1 = await Promise.all([
     aliceWicpActor.mint([], BigInt(4)),
     aliceWicpActor.mint([], BigInt(4)),
     aliceWicpActor.mint([], BigInt(4)),
     aliceWicpActor.mint([], BigInt(4)),
     aliceWicpActor.mint([], BigInt(4))
   ]);
-  const ok = result.filter(r => "Ok" in r);
-  const err = result.filter(r => "Err" in r);
-  t.is(ok.length, 1);
-  t.is(err.length, 4);
-  t.deepEqual(ok[0], {Ok: BigInt(1)});
-  t.deepEqual(err[0], {Err: {BlockUsed: null}});
-  t.deepEqual(err[1], {Err: {BlockUsed: null}});
-  t.deepEqual(err[2], {Err: {BlockUsed: null}});
-  t.deepEqual(err[3], {Err: {BlockUsed: null}});
+  const ok1 = result1.filter(r => "Ok" in r);
+  const err1 = result1.filter(r => "Err" in r);
+  t.is(ok1.length, 1);
+  t.is(err1.length, 4);
+  t.deepEqual(ok1[0], {Ok: BigInt(1)});
+  t.deepEqual(err1[0], {Err: {BlockUsed: null}});
+  t.deepEqual(err1[1], {Err: {BlockUsed: null}});
+  t.deepEqual(err1[2], {Err: {BlockUsed: null}});
+  t.deepEqual(err1[3], {Err: {BlockUsed: null}});
+  t.deepEqual(await aliceWicpActor.mint([], BigInt(4)), {Err: {BlockUsed: null}});
+
+  // bob mint
+  const result2 = await Promise.all([
+    bobWicpActor.mint([], BigInt(5)),
+    bobWicpActor.mint([], BigInt(5)),
+    bobWicpActor.mint([], BigInt(5)),
+    bobWicpActor.mint([], BigInt(5)),
+    bobWicpActor.mint([], BigInt(5))
+  ]);
+  const ok2 = result2.filter(r => "Ok" in r);
+  const err2 = result2.filter(r => "Err" in r);
+  t.is(ok2.length, 1);
+  t.is(err2.length, 4);
+  t.deepEqual(ok2[0], {Ok: BigInt(2)});
+  t.deepEqual(err2[0], {Err: {BlockUsed: null}});
+  t.deepEqual(err2[1], {Err: {BlockUsed: null}});
+  t.deepEqual(err2[2], {Err: {BlockUsed: null}});
+  t.deepEqual(err2[3], {Err: {BlockUsed: null}});
+  t.deepEqual(await bobWicpActor.mint([], BigInt(5)), {Err: {BlockUsed: null}});
+});
+
+test.serial("verify WICP balance", async t => {
+  (await Promise.all(allActors.map(actor => actor.balanceOf(aliceIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(50_000_000_000));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(bobIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(20_000_000_000));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(johnIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(custodianIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(0));
+  });
 });
