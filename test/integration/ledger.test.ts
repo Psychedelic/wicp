@@ -293,7 +293,7 @@ test.serial("mint WICP", async t => {
   t.deepEqual(await bobWicpActor.mint([], BigInt(5)), {Err: {BlockUsed: null}});
 });
 
-test.serial("verify WICP balance", async t => {
+test.serial("verify WICP balance after mint", async t => {
   (await Promise.all(allActors.map(actor => actor.balanceOf(aliceIdentity.getPrincipal())))).forEach(result => {
     t.is(result, BigInt(50_000_000_000));
   });
@@ -306,4 +306,18 @@ test.serial("verify WICP balance", async t => {
   (await Promise.all(allActors.map(actor => actor.balanceOf(custodianIdentity.getPrincipal())))).forEach(result => {
     t.is(result, BigInt(0));
   });
+});
+
+test.serial("verify stats after mint", async t => {
+  const result = await custodianWicpActor.stats();
+  t.truthy(result.cycles);
+  t.is(result.icps, BigInt(70_000_000_000));
+  t.is(result.total_supply, BigInt(70_000_000_000));
+  t.is(result.total_transactions, BigInt(2));
+  t.is(result.total_unique_holders, BigInt(2));
+  t.truthy(await custodianWicpActor.cycles());
+  t.is(await custodianWicpActor.icps(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalSupply(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalTransactions(), BigInt(2));
+  t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(2));
 });
