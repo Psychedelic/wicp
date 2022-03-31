@@ -32,6 +32,8 @@ export interface ManualReply {
   'used_blocks' : Array<bigint>,
   'balances' : Array<[Principal, bigint]>,
 }
+export type ManualReply_1 = { 'Ok' : TxEvent } |
+  { 'Err' : TokenError };
 export interface Metadata {
   'cap' : [] | [Principal],
   'fee' : [] | [bigint],
@@ -121,7 +123,7 @@ export interface _SERVICE {
   'totalSupply' : () => Promise<bigint>,
   'totalTransactions' : () => Promise<bigint>,
   'totalUniqueHolders' : () => Promise<bigint>,
-  'transaction' : (arg_0: bigint) => Promise<[] | [TxEvent]>,
+  'transaction' : (arg_0: bigint) => Promise<ManualReply_1>,
   'transfer' : (arg_0: Principal, arg_1: bigint) => Promise<Result>,
   'transferFrom' : (
       arg_0: Principal,

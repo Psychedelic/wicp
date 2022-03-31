@@ -524,7 +524,7 @@ fn allowance(owner: Principal, spender: Principal) -> Nat {
 // ==================================================================================================
 #[query(name = "transaction", manual_reply = true)]
 #[candid_method(query, rename = "transaction")]
-fn transaction(index: Nat) -> ManualReply<Option<TxEvent>> {
+fn transaction(index: Nat) -> ManualReply<Result<TxEvent, TokenError>> {
     ledger::with(|ledger| {
         ManualReply::one(
             index
@@ -685,6 +685,14 @@ async fn mint(
             "mint".into(),
             vec![
                 ("to".into(), GenericValue::Principal(caller)),
+                (
+                    "block_height".into(),
+                    GenericValue::Nat64Content(block_height),
+                ),
+                (
+                    "account_id".into(),
+                    GenericValue::TextContent(caller_account.to_hex()),
+                ),
                 (
                     "amount".into(),
                     GenericValue::NatContent(Nat::from(amount.get_e8s())),

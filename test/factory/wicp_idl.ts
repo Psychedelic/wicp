@@ -102,6 +102,7 @@ export const idlFactory = ({ IDL }) => {
     'total_unique_holders' : IDL.Nat,
     'total_supply' : IDL.Nat,
   });
+  const ManualReply_1 = IDL.Variant({ 'Ok' : TxEvent, 'Err' : TokenError });
   return IDL.Service({
     'allowance' : IDL.Func(
         [IDL.Principal, IDL.Principal],
@@ -136,7 +137,7 @@ export const idlFactory = ({ IDL }) => {
     'totalSupply' : IDL.Func([], [IDL.Nat], ['query']),
     'totalTransactions' : IDL.Func([], [IDL.Nat], ['query']),
     'totalUniqueHolders' : IDL.Func([], [IDL.Nat], ['query']),
-    'transaction' : IDL.Func([IDL.Nat], [IDL.Opt(TxEvent)], ['query']),
+    'transaction' : IDL.Func([IDL.Nat], [ManualReply_1], ['query']),
     'transfer' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
     'transferFrom' : IDL.Func(
         [IDL.Principal, IDL.Principal, IDL.Nat],

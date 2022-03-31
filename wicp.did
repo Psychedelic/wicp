@@ -33,6 +33,7 @@ type ManualReply = record {
   used_blocks : vec nat64;
   balances : vec record { principal; nat };
 };
+type ManualReply_1 = variant { Ok : TxEvent; Err : TokenError };
 type Metadata = record {
   cap : opt principal;
   fee : opt nat;
@@ -123,7 +124,7 @@ service : (opt InitArgs) -> {
   totalSupply : () -> (nat) query;
   totalTransactions : () -> (nat) query;
   totalUniqueHolders : () -> (nat) query;
-  transaction : (nat) -> (opt TxEvent) query;
+  transaction : (nat) -> (ManualReply_1) query;
   transfer : (principal, nat) -> (Result);
   transferFrom : (principal, principal, nat) -> (Result);
   withdraw : (nat, text) -> (Result);
