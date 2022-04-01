@@ -25,7 +25,7 @@ import test from "ava";
 const normalActors = [aliceWicpActor, bobWicpActor, johnWicpActor];
 const allActors = [...normalActors, custodianWicpActor];
 
-test.serial("transfer ICP success.", async t => {
+test.serial("transfer ICP successfully.", async t => {
   t.deepEqual(
     await ledgerActor.transfer({
       to: Array.from(Buffer.from(aliceAccountId.toHex(), "hex")),
@@ -86,7 +86,7 @@ test.serial("transfer ICP success.", async t => {
   );
 });
 
-test.serial("verify initial stats.", async t => {
+test.serial("verify WICP initial stats.", async t => {
   const result = await custodianWicpActor.stats();
   t.truthy(result.cycles);
   t.is(result.icps, BigInt(0));
@@ -100,13 +100,34 @@ test.serial("verify initial stats.", async t => {
   t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(0));
 });
 
-test.serial("only custody can query stats.", async t => {
+test.serial("error on query stats when the caller is non-custodian.", async t => {
   (await Promise.allSettled(normalActors.map(actor => actor.stats()))).forEach(promise => {
+    t.is(promise.status, "rejected");
+  });
+  (await Promise.allSettled(normalActors.map(actor => actor.cycles()))).forEach(promise => {
+    t.is(promise.status, "rejected");
+  });
+  (await Promise.allSettled(normalActors.map(actor => actor.icps()))).forEach(promise => {
+    t.is(promise.status, "rejected");
+  });
+  (await Promise.allSettled(normalActors.map(actor => actor.totalSupply()))).forEach(promise => {
+    t.is(promise.status, "rejected");
+  });
+  (await Promise.allSettled(normalActors.map(actor => actor.totalTransactions()))).forEach(promise => {
+    t.is(promise.status, "rejected");
+  });
+  (await Promise.allSettled(normalActors.map(actor => actor.totalUniqueHolders()))).forEach(promise => {
     t.is(promise.status, "rejected");
   });
 });
 
-test.serial("verify initial balance.", async t => {
+test.serial("error on query backup when the caller is non-custodian.", async t => {
+  (await Promise.allSettled(normalActors.map(actor => actor.backup()))).forEach(promise => {
+    t.is(promise.status, "rejected");
+  });
+});
+
+test.serial("verify initial users balance.", async t => {
   (await Promise.all(allActors.map(actor => actor.balanceOf(ledgerIdentity.getPrincipal())))).forEach(result => {
     t.is(result, BigInt(0));
   });
@@ -182,7 +203,7 @@ test.serial("error on `mint` invalid block.", async t => {
   );
 });
 
-test.serial("error on `mint` unauthorize `from`.", async t => {
+test.serial("error on `mint` unauthorized `from`.", async t => {
   (
     await Promise.all([
       aliceWicpActor.mint([], BigInt(2)),
@@ -247,7 +268,7 @@ test.serial("transfer ICP from bob to john.", async t => {
   );
 });
 
-test.serial("error on `mint` unauthorize `to`.", async t => {
+test.serial("error on `mint` unauthorized `to`.", async t => {
   (await Promise.all([aliceWicpActor.mint([], BigInt(6)), bobWicpActor.mint([], BigInt(7))])).forEach(result =>
     t.deepEqual(result, {Err: {ErrorTo: null}})
   );
@@ -256,11 +277,11 @@ test.serial("error on `mint` unauthorize `to`.", async t => {
 test.serial("`mint` WICP.", async t => {
   // alice mint
   const result1 = await Promise.all([
-    aliceWicpActor.mint([], BigInt(4)),
-    aliceWicpActor.mint([], BigInt(4)),
-    aliceWicpActor.mint([], BigInt(4)),
-    aliceWicpActor.mint([], BigInt(4)),
-    aliceWicpActor.mint([], BigInt(4))
+    aliceWicpActor.mint([], BigInt(4)), // attempt to break atomicity.
+    aliceWicpActor.mint([], BigInt(4)), // attempt to break atomicity.
+    aliceWicpActor.mint([], BigInt(4)), // attempt to break atomicity.
+    aliceWicpActor.mint([], BigInt(4)), // attempt to break atomicity.
+    aliceWicpActor.mint([], BigInt(4)) // attempt to break atomicity.
   ]);
   const ok1 = result1.filter(r => "Ok" in r);
   const err1 = result1.filter(r => "Err" in r);
@@ -275,11 +296,11 @@ test.serial("`mint` WICP.", async t => {
 
   // bob mint
   const result2 = await Promise.all([
-    bobWicpActor.mint([], BigInt(5)),
-    bobWicpActor.mint([], BigInt(5)),
-    bobWicpActor.mint([], BigInt(5)),
-    bobWicpActor.mint([], BigInt(5)),
-    bobWicpActor.mint([], BigInt(5))
+    bobWicpActor.mint([], BigInt(5)), // attempt to break atomicity.
+    bobWicpActor.mint([], BigInt(5)), // attempt to break atomicity.
+    bobWicpActor.mint([], BigInt(5)), // attempt to break atomicity.
+    bobWicpActor.mint([], BigInt(5)), // attempt to break atomicity.
+    bobWicpActor.mint([], BigInt(5)) // attempt to break atomicity.
   ]);
   const ok2 = result2.filter(r => "Ok" in r);
   const err2 = result2.filter(r => "Err" in r);
@@ -293,7 +314,7 @@ test.serial("`mint` WICP.", async t => {
   t.deepEqual(await bobWicpActor.mint([], BigInt(5)), {Err: {BlockUsed: null}});
 });
 
-test.serial("verify WICP balance after `mint`.", async t => {
+test.serial("verify users balance after `mint`.", async t => {
   (await Promise.all(allActors.map(actor => actor.balanceOf(aliceIdentity.getPrincipal())))).forEach(result => {
     t.is(result, BigInt(50_000_000_000));
   });
@@ -308,7 +329,7 @@ test.serial("verify WICP balance after `mint`.", async t => {
   });
 });
 
-test.serial("verify stats after `mint`.", async t => {
+test.serial("verify WICP stats after `mint`.", async t => {
   const result = await custodianWicpActor.stats();
   t.truthy(result.cycles);
   t.is(result.icps, BigInt(70_000_000_000));
@@ -322,7 +343,7 @@ test.serial("verify stats after `mint`.", async t => {
   t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(2));
 });
 
-test.serial("empty on query non-exist transactions.", async t => {
+test.serial("error on query non-exist transactions.", async t => {
   (await Promise.all(allActors.map(actor => actor.transaction(BigInt(0))))).forEach(result => {
     t.deepEqual(result, {Err: {TxNotFound: null}});
   });
@@ -369,4 +390,50 @@ test.serial("should mark block as used after `mint`.", async t => {
   (await Promise.all(allActors.map(actor => actor.isBlockUsed(BigInt(5))))).forEach(result => {
     t.is(result, true);
   });
+});
+
+test.serial("error on `approve` when owner have insufficient balance WICP", async t => {
+  t.falsy(await custodianWicpActor.setFee(BigInt(10_000)));
+  t.deepEqual(await custodianWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(1)), {
+    Err: {InsufficientBalance: null}
+  });
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+});
+
+test.serial("`approve` WICP with fee.", async t => {
+  t.falsy(await custodianWicpActor.setFee(BigInt(10_000)));
+  t.falsy(await custodianWicpActor.setFeeTo(custodianIdentity.getPrincipal()));
+  t.deepEqual(await aliceWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(100_000_000)), {Ok: BigInt(3)});
+  t.deepEqual(await aliceWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(0)), {Ok: BigInt(4)});
+  t.deepEqual(await bobWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(500_000_000)), {Ok: BigInt(5)});
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+});
+
+test.serial("verify users balance after `approve` with fee.", async t => {
+  (await Promise.all(allActors.map(actor => actor.balanceOf(aliceIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(49_999_980_000));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(bobIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(19_999_990_000));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(johnIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+  (await Promise.all(allActors.map(actor => actor.balanceOf(custodianIdentity.getPrincipal())))).forEach(result => {
+    t.is(result, BigInt(30_000));
+  });
+});
+
+test.serial("verify stats after `approve` with fee.", async t => {
+  const result = await custodianWicpActor.stats();
+  t.truthy(result.cycles);
+  t.is(result.icps, BigInt(70_000_000_000));
+  t.is(result.total_supply, BigInt(70_000_000_000));
+  t.is(result.total_transactions, BigInt(5));
+  t.is(result.total_unique_holders, BigInt(3));
+  t.truthy(await custodianWicpActor.cycles());
+  t.is(await custodianWicpActor.icps(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalSupply(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalTransactions(), BigInt(5));
+  t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(3));
 });

@@ -69,7 +69,7 @@ const testCustodians = async (t: Assertions) => {
   );
 };
 
-test("simple CRUD metadata", async t => {
+test("simple CRUD metadata.", async t => {
   await Promise.all([
     testName(t),
     testLogo(t),
@@ -94,7 +94,7 @@ test("simple CRUD metadata", async t => {
   });
 });
 
-test("error on unauthorize updating metadata", async t => {
+test("error on unauthorized updating metadata.", async t => {
   // setName error when caller is not an custodian
   (await Promise.allSettled(normalActors.map(actor => actor.setName("wicp")))).forEach(promise =>
     t.is(promise.status, "rejected")
