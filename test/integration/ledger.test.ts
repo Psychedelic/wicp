@@ -437,17 +437,73 @@ test.serial("verify users balance after `approve` with fee.", async t => {
 test.serial("verify users allowance after `approve` with fee.", async t => {
   (
     await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), johnIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
       allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
     )
+  ).forEach(result => t.is(result, BigInt(0)));
+
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), aliceIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), johnIdentity.getPrincipal())))
   ).forEach(result => t.is(result, BigInt(0)));
   (
     await Promise.all(
       allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
     )
   ).forEach(result => t.is(result, BigInt(500_010_000)));
+
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), johnIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
   (
     await Promise.all(
       allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), bobIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), johnIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
     )
   ).forEach(result => t.is(result, BigInt(0)));
 });
@@ -503,6 +559,7 @@ test.serial("`approve` WICP with zero fee.", async t => {
   t.deepEqual(await aliceWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(200_000_000)), {Ok: BigInt(6)});
   t.deepEqual(await aliceWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(0)), {Ok: BigInt(7)});
   t.deepEqual(await bobWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(600_000_000)), {Ok: BigInt(8)});
+  t.deepEqual(await johnWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(100_000_000)), {Ok: BigInt(9)});
 });
 
 test.serial("verify stats after `approve` with zero fee.", async t => {
@@ -510,12 +567,12 @@ test.serial("verify stats after `approve` with zero fee.", async t => {
   t.truthy(result.cycles);
   t.is(result.icps, BigInt(70_000_000_000));
   t.is(result.total_supply, BigInt(70_000_000_000));
-  t.is(result.total_transactions, BigInt(8));
+  t.is(result.total_transactions, BigInt(9));
   t.is(result.total_unique_holders, BigInt(3));
   t.truthy(await custodianWicpActor.cycles());
   t.is(await custodianWicpActor.icps(), BigInt(70_000_000_000));
   t.is(await custodianWicpActor.totalSupply(), BigInt(70_000_000_000));
-  t.is(await custodianWicpActor.totalTransactions(), BigInt(8));
+  t.is(await custodianWicpActor.totalTransactions(), BigInt(9));
   t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(3));
 });
 
@@ -551,17 +608,73 @@ test.serial("verify users balance after `approve` with zero fee.", async t => {
 test.serial("verify users allowance after `approve` with zero fee.", async t => {
   (
     await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), johnIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
       allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
     )
+  ).forEach(result => t.is(result, BigInt(0)));
+
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), aliceIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), johnIdentity.getPrincipal())))
   ).forEach(result => t.is(result, BigInt(0)));
   (
     await Promise.all(
       allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
     )
   ).forEach(result => t.is(result, BigInt(600_000_000)));
+
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), johnIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
   (
     await Promise.all(
       allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(100_000_000)));
+
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), bobIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), johnIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
     )
   ).forEach(result => t.is(result, BigInt(0)));
 });
@@ -606,6 +719,433 @@ test.serial("verify transaction after `approve` with zero fee.", async t => {
           ["fee", {NatContent: BigInt(0)}]
         ],
         caller: bobIdentity.getPrincipal()
+      }
+    })
+  );
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(9))))).forEach(result =>
+    t.like(result, {
+      Ok: {
+        operation: "approve",
+        details: [
+          ["owner", {Principal: johnIdentity.getPrincipal()}],
+          ["spender", {Principal: custodianIdentity.getPrincipal()}],
+          ["amount", {NatContent: BigInt(100_000_000)}],
+          ["fee", {NatContent: BigInt(0)}]
+        ],
+        caller: johnIdentity.getPrincipal()
+      }
+    })
+  );
+});
+
+test.serial("error on `transferFrom` with fee when spender have insufficient allowance WICP.", async t => {
+  t.falsy(await custodianWicpActor.setFee(BigInt(1)));
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(aliceIdentity.getPrincipal(), johnIdentity.getPrincipal(), BigInt(0)),
+    {
+      Err: {InsufficientAllowance: null}
+    }
+  );
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(bobIdentity.getPrincipal(), johnIdentity.getPrincipal(), BigInt(600_000_000)),
+    {
+      Err: {InsufficientAllowance: null}
+    }
+  );
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(
+      johnIdentity.getPrincipal(),
+      johnIdentity.getPrincipal(),
+      BigInt(100_000_000)
+    ),
+    {
+      Err: {InsufficientAllowance: null}
+    }
+  );
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+});
+
+test.serial("error on `transferFrom` with zero fee when spender have insufficient allowance WICP.", async t => {
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(aliceIdentity.getPrincipal(), johnIdentity.getPrincipal(), BigInt(1)),
+    {
+      Err: {InsufficientAllowance: null}
+    }
+  );
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(bobIdentity.getPrincipal(), johnIdentity.getPrincipal(), BigInt(600_000_001)),
+    {
+      Err: {InsufficientAllowance: null}
+    }
+  );
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(
+      johnIdentity.getPrincipal(),
+      johnIdentity.getPrincipal(),
+      BigInt(100_000_001)
+    ),
+    {
+      Err: {InsufficientAllowance: null}
+    }
+  );
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+});
+
+test.serial("error on `transferFrom` with fee when owner have insufficient balance WICP.", async t => {
+  t.falsy(await custodianWicpActor.setFee(BigInt(1)));
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(johnIdentity.getPrincipal(), johnIdentity.getPrincipal(), BigInt(99_999_999)),
+    {
+      Err: {InsufficientBalance: null}
+    }
+  );
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+});
+
+test.serial("error on `transferFrom` with zero fee when owner have insufficient balance WICP.", async t => {
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(
+      johnIdentity.getPrincipal(),
+      johnIdentity.getPrincipal(),
+      BigInt(100_000_000)
+    ),
+    {
+      Err: {InsufficientBalance: null}
+    }
+  );
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+});
+
+test.serial("`transferFrom` with fee.", async t => {
+  t.falsy(await custodianWicpActor.setFee(BigInt(1)));
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(bobIdentity.getPrincipal(), johnIdentity.getPrincipal(), BigInt(199_999_999)),
+    {
+      Ok: BigInt(10)
+    }
+  );
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+});
+
+test.serial("verify stats after `transferFrom` with fee.", async t => {
+  const result = await custodianWicpActor.stats();
+  t.truthy(result.cycles);
+  t.is(result.icps, BigInt(70_000_000_000));
+  t.is(result.total_supply, BigInt(70_000_000_000));
+  t.is(result.total_transactions, BigInt(10));
+  t.is(result.total_unique_holders, BigInt(4));
+  t.truthy(await custodianWicpActor.cycles());
+  t.is(await custodianWicpActor.icps(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalSupply(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalTransactions(), BigInt(10));
+  t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(4));
+});
+
+test.serial("verify users balance after `transferFrom` with fee.", async t => {
+  (await Promise.all(allActors.map(actor => actor.balanceOf(aliceIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(49_999_980_000))
+  );
+  (await Promise.all(allActors.map(actor => actor.balanceOf(bobIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(19_799_990_000))
+  );
+  (await Promise.all(allActors.map(actor => actor.balanceOf(johnIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(199_999_999))
+  );
+  (await Promise.all(allActors.map(actor => actor.balanceOf(custodianIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(30_001))
+  );
+});
+
+test.serial("verify users allowance after `transferFrom` with fee.", async t => {
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), johnIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), aliceIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), johnIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(400_000_000)));
+
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), johnIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(100_000_000)));
+
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), bobIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), johnIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+});
+
+test.serial("verify transaction after `transferFrom` with fee.", async t => {
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(10))))).forEach(result =>
+    t.like(result, {
+      Ok: {
+        operation: "transferFrom",
+        details: [
+          ["from", {Principal: bobIdentity.getPrincipal()}],
+          ["to", {Principal: johnIdentity.getPrincipal()}],
+          ["amount", {NatContent: BigInt(199_999_999)}],
+          ["fee", {NatContent: BigInt(1)}]
+        ],
+        caller: custodianIdentity.getPrincipal()
+      }
+    })
+  );
+});
+
+test.serial("`transferFrom` with zero fee.", async t => {
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(bobIdentity.getPrincipal(), johnIdentity.getPrincipal(), BigInt(400_000_000)),
+    {
+      Ok: BigInt(11)
+    }
+  );
+  // NOTE: recommended to have fee
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(aliceIdentity.getPrincipal(), aliceIdentity.getPrincipal(), BigInt(0)),
+    {
+      Ok: BigInt(12)
+    }
+  );
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(bobIdentity.getPrincipal(), bobIdentity.getPrincipal(), BigInt(0)),
+    {
+      Ok: BigInt(13)
+    }
+  );
+  t.deepEqual(
+    await custodianWicpActor.transferFrom(johnIdentity.getPrincipal(), johnIdentity.getPrincipal(), BigInt(0)),
+    {
+      Ok: BigInt(14)
+    }
+  );
+  t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+});
+
+test.serial("verify stats after `transferFrom` with zero fee.", async t => {
+  const result = await custodianWicpActor.stats();
+  t.truthy(result.cycles);
+  t.is(result.icps, BigInt(70_000_000_000));
+  t.is(result.total_supply, BigInt(70_000_000_000));
+  t.is(result.total_transactions, BigInt(14));
+  t.is(result.total_unique_holders, BigInt(4));
+  t.truthy(await custodianWicpActor.cycles());
+  t.is(await custodianWicpActor.icps(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalSupply(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalTransactions(), BigInt(14));
+  t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(4));
+});
+
+test.serial("verify users balance after `transferFrom` with zero fee.", async t => {
+  (await Promise.all(allActors.map(actor => actor.balanceOf(aliceIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(49_999_980_000))
+  );
+  (await Promise.all(allActors.map(actor => actor.balanceOf(bobIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(19_399_990_000))
+  );
+  (await Promise.all(allActors.map(actor => actor.balanceOf(johnIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(599_999_999))
+  );
+  (await Promise.all(allActors.map(actor => actor.balanceOf(custodianIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(30_001))
+  );
+});
+
+test.serial("verify users allowance after `transferFrom` with zero fee.", async t => {
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), johnIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), aliceIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), johnIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), bobIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), johnIdentity.getPrincipal())))
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(100_000_000)));
+
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), aliceIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), bobIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), johnIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(custodianIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => t.is(result, BigInt(0)));
+});
+
+test.serial("verify transaction after `transferFrom` with zero fee.", async t => {
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(11))))).forEach(result =>
+    t.like(result, {
+      Ok: {
+        operation: "transferFrom",
+        details: [
+          ["from", {Principal: bobIdentity.getPrincipal()}],
+          ["to", {Principal: johnIdentity.getPrincipal()}],
+          ["amount", {NatContent: BigInt(400_000_000)}],
+          ["fee", {NatContent: BigInt(0)}]
+        ],
+        caller: custodianIdentity.getPrincipal()
+      }
+    })
+  );
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(12))))).forEach(result =>
+    t.like(result, {
+      Ok: {
+        operation: "transferFrom",
+        details: [
+          ["from", {Principal: aliceIdentity.getPrincipal()}],
+          ["to", {Principal: aliceIdentity.getPrincipal()}],
+          ["amount", {NatContent: BigInt(0)}],
+          ["fee", {NatContent: BigInt(0)}]
+        ],
+        caller: custodianIdentity.getPrincipal()
+      }
+    })
+  );
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(13))))).forEach(result =>
+    t.like(result, {
+      Ok: {
+        operation: "transferFrom",
+        details: [
+          ["from", {Principal: bobIdentity.getPrincipal()}],
+          ["to", {Principal: bobIdentity.getPrincipal()}],
+          ["amount", {NatContent: BigInt(0)}],
+          ["fee", {NatContent: BigInt(0)}]
+        ],
+        caller: custodianIdentity.getPrincipal()
+      }
+    })
+  );
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(14))))).forEach(result =>
+    t.like(result, {
+      Ok: {
+        operation: "transferFrom",
+        details: [
+          ["from", {Principal: johnIdentity.getPrincipal()}],
+          ["to", {Principal: johnIdentity.getPrincipal()}],
+          ["amount", {NatContent: BigInt(0)}],
+          ["fee", {NatContent: BigInt(0)}]
+        ],
+        caller: custodianIdentity.getPrincipal()
       }
     })
   );

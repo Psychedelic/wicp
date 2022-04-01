@@ -246,7 +246,7 @@ mod ledger {
 
         pub fn grant_allowance(&mut self, from: &Principal, to: &Principal, amount: Nat) {
             amount
-                .eq(&self.actual_fee())
+                .le(&self.actual_fee())
                 .then(|| {
                     self.allowances
                         .get_mut(from)
@@ -606,7 +606,7 @@ fn transfer_from(from: Principal, to: Principal, amount: Nat) -> Result<Nat, Tok
         ledger.grant_allowance(
             &from,
             &spender,
-            ledger.allowance(&from, &spender) - amount.clone(),
+            ledger.allowance(&from, &spender) - amount.clone() - ledger.actual_fee(),
         );
         Ok(Nat::from(ledger.add_tx(
             spender,
