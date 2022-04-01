@@ -392,7 +392,7 @@ test.serial("should mark block as used after `mint`.", async t => {
   });
 });
 
-test.serial("error on `approve` when owner have insufficient balance WICP", async t => {
+test.serial("error on `approve` when owner have insufficient balance WICP.", async t => {
   t.falsy(await custodianWicpActor.setFee(BigInt(10_000)));
   t.deepEqual(await custodianWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(1)), {
     Err: {InsufficientBalance: null}
@@ -407,6 +407,20 @@ test.serial("`approve` WICP with fee.", async t => {
   t.deepEqual(await aliceWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(0)), {Ok: BigInt(4)});
   t.deepEqual(await bobWicpActor.approve(custodianIdentity.getPrincipal(), BigInt(500_000_000)), {Ok: BigInt(5)});
   t.falsy(await custodianWicpActor.setFee(BigInt(0)));
+});
+
+test.serial("verify stats after `approve` with fee.", async t => {
+  const result = await custodianWicpActor.stats();
+  t.truthy(result.cycles);
+  t.is(result.icps, BigInt(70_000_000_000));
+  t.is(result.total_supply, BigInt(70_000_000_000));
+  t.is(result.total_transactions, BigInt(5));
+  t.is(result.total_unique_holders, BigInt(3));
+  t.truthy(await custodianWicpActor.cycles());
+  t.is(await custodianWicpActor.icps(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalSupply(), BigInt(70_000_000_000));
+  t.is(await custodianWicpActor.totalTransactions(), BigInt(5));
+  t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(3));
 });
 
 test.serial("verify users balance after `approve` with fee.", async t => {
@@ -448,16 +462,47 @@ test.serial("verify users allowance after `approve` with fee.", async t => {
   });
 });
 
-test.serial("verify stats after `approve` with fee.", async t => {
-  const result = await custodianWicpActor.stats();
-  t.truthy(result.cycles);
-  t.is(result.icps, BigInt(70_000_000_000));
-  t.is(result.total_supply, BigInt(70_000_000_000));
-  t.is(result.total_transactions, BigInt(5));
-  t.is(result.total_unique_holders, BigInt(3));
-  t.truthy(await custodianWicpActor.cycles());
-  t.is(await custodianWicpActor.icps(), BigInt(70_000_000_000));
-  t.is(await custodianWicpActor.totalSupply(), BigInt(70_000_000_000));
-  t.is(await custodianWicpActor.totalTransactions(), BigInt(5));
-  t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(3));
+test.serial("verify transaction after `approve` with fee.", async t => {
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(3))))).forEach(result => {
+    t.like(result, {
+      Ok: {
+        operation: "approve",
+        details: [
+          ["owner", {Principal: aliceIdentity.getPrincipal()}],
+          ["spender", {Principal: custodianIdentity.getPrincipal()}],
+          ["amount", {NatContent: BigInt(100_010_000)}],
+          ["fee", {NatContent: BigInt(10_000)}]
+        ],
+        caller: aliceIdentity.getPrincipal()
+      }
+    });
+  });
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(4))))).forEach(result => {
+    t.like(result, {
+      Ok: {
+        operation: "approve",
+        details: [
+          ["owner", {Principal: aliceIdentity.getPrincipal()}],
+          ["spender", {Principal: custodianIdentity.getPrincipal()}],
+          ["amount", {NatContent: BigInt(10_000)}],
+          ["fee", {NatContent: BigInt(10_000)}]
+        ],
+        caller: aliceIdentity.getPrincipal()
+      }
+    });
+  });
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(5))))).forEach(result => {
+    t.like(result, {
+      Ok: {
+        operation: "approve",
+        details: [
+          ["owner", {Principal: bobIdentity.getPrincipal()}],
+          ["spender", {Principal: custodianIdentity.getPrincipal()}],
+          ["amount", {NatContent: BigInt(500_010_000)}],
+          ["fee", {NatContent: BigInt(10_000)}]
+        ],
+        caller: bobIdentity.getPrincipal()
+      }
+    });
+  });
 });
