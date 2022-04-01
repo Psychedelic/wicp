@@ -424,6 +424,30 @@ test.serial("verify users balance after `approve` with fee.", async t => {
   });
 });
 
+test.serial("verify users allowance after `approve` with fee.", async t => {
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(aliceIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(bobIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => {
+    t.is(result, BigInt(500_010_000));
+  });
+  (
+    await Promise.all(
+      allActors.map(actor => actor.allowance(johnIdentity.getPrincipal(), custodianIdentity.getPrincipal()))
+    )
+  ).forEach(result => {
+    t.is(result, BigInt(0));
+  });
+});
+
 test.serial("verify stats after `approve` with fee.", async t => {
   const result = await custodianWicpActor.stats();
   t.truthy(result.cycles);
