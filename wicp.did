@@ -59,10 +59,12 @@ type TokenError = variant {
   BlockError;
   InsufficientBalance;
   TxNotFound;
+  InvalidAccountId;
   ErrorOperationStyle;
   Unauthorized;
   LedgerTrap;
   ErrorTo;
+  InvalidE8sAmount;
   Other : text;
   BlockUsed;
   AmountTooSmall;

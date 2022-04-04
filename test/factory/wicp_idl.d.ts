@@ -59,10 +59,12 @@ export type TokenError = { 'InsufficientAllowance' : null } |
   { 'BlockError' : null } |
   { 'InsufficientBalance' : null } |
   { 'TxNotFound' : null } |
+  { 'InvalidAccountId' : null } |
   { 'ErrorOperationStyle' : null } |
   { 'Unauthorized' : null } |
   { 'LedgerTrap' : null } |
   { 'ErrorTo' : null } |
+  { 'InvalidE8sAmount' : null } |
   { 'Other' : string } |
   { 'BlockUsed' : null } |
   { 'AmountTooSmall' : null };

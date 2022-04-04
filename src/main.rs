@@ -30,6 +30,7 @@ mod types {
         pub fee_to: Option<Principal>,
         pub custodians: Option<HashSet<Principal>>,
         pub cap: Option<Principal>,
+        // TODO: threshold
     }
     #[derive(CandidType, Deserialize)]
     pub enum GenericValue {
@@ -83,6 +84,8 @@ mod types {
         ErrorOperationStyle,
         AmountTooSmall,
         LedgerTrap,
+        InvalidAccountId,
+        InvalidE8sAmount,
         Other(String),
     }
     #[derive(CandidType, Deserialize)]
@@ -302,11 +305,14 @@ mod ledger {
             self.balances.insert(to, self.balance_of(&to) + amount);
         }
 
-        pub fn withdraw(&mut self, to: Principal, amount: Nat) {
-            self.is_enough_balance_to_spend(&to, amount.clone())
+        pub fn withdraw(&mut self, from: Principal, amount: Nat) {
+            self.is_enough_balance_to_spend(&from, amount.clone())
                 .then(|| ())
                 .expect("TokenError::InsufficientBalance"); // guarding state
-            self.balances.insert(to, self.balance_of(&to) - amount);
+            self.balances.insert(from, self.balance_of(&from) - amount);
+            self.balance_of(&from)
+                .eq(&0)
+                .then(|| self.balances.remove(&from));
         }
 
         pub fn add_tx(
@@ -718,16 +724,18 @@ async fn withdraw(amount: Nat, to: String) -> Result<Nat, TokenError> {
         .ge(&amount)
         .then(|| ())
         .ok_or(TokenError::InsufficientBalance)?;
+    // make sure the canister only performs send ICP when it has enough balance.
     total_supply()
         .ge(&amount)
         .then(|| ())
         .ok_or(TokenError::InsufficientBalance)?;
     let args = SendArgs {
         memo: Memo(0),
-        amount: (Tokens::from_e8s(amount_e8s) - DEFAULT_TRANSFER_FEE).unwrap(),
+        amount: (Tokens::from_e8s(amount_e8s) - DEFAULT_TRANSFER_FEE)
+            .map_err(|_| TokenError::InvalidE8sAmount)?,
         fee: DEFAULT_TRANSFER_FEE,
         from_subaccount: None,
-        to: AccountIdentifier::from_hex(&to).unwrap(),
+        to: AccountIdentifier::from_hex(&to).map_err(|_| TokenError::InvalidAccountId)?,
         created_at_time: None,
     };
     ledger::with_mut(|ledger| ledger.withdraw(caller, amount.clone()));
@@ -741,14 +749,19 @@ async fn withdraw(amount: Nat, to: String) -> Result<Nat, TokenError> {
         ledger::with_mut(|ledger| ledger.mint(caller, amount.clone()));
         TokenError::LedgerTrap
     })
-    .map(|_| {
+    .map(|(block_height,)| {
         ledger::with_mut(|ledger| {
             Nat::from(ledger.add_tx(
                 caller,
-                "burn".into(),
+                "withdraw".into(),
                 vec![
-                    ("to".into(), GenericValue::Principal(caller)),
+                    ("from".into(), GenericValue::Principal(caller)),
+                    ("to".into(), GenericValue::TextContent(to)),
                     ("amount".into(), GenericValue::NatContent(amount)),
+                    (
+                        "block_height".into(),
+                        GenericValue::Nat64Content(block_height),
+                    ),
                 ],
             ))
         })

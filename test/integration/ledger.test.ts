@@ -508,7 +508,7 @@ test.serial("verify users allowance after `approve` with fee.", async t => {
   ).forEach(result => t.is(result, BigInt(0)));
 });
 
-test.serial("verify transaction after `approve` with fee.", async t => {
+test.serial("verify transactions after `approve` with fee.", async t => {
   (await Promise.all(allActors.map(actor => actor.transaction(BigInt(3))))).forEach(result =>
     t.like(result, {
       Ok: {
@@ -679,7 +679,7 @@ test.serial("verify users allowance after `approve` with zero fee.", async t => 
   ).forEach(result => t.is(result, BigInt(0)));
 });
 
-test.serial("verify transaction after `approve` with zero fee.", async t => {
+test.serial("verify transactions after `approve` with zero fee.", async t => {
   (await Promise.all(allActors.map(actor => actor.transaction(BigInt(6))))).forEach(result =>
     t.like(result, {
       Ok: {
@@ -932,7 +932,7 @@ test.serial("verify users allowance after `transferFrom` with fee.", async t => 
   ).forEach(result => t.is(result, BigInt(0)));
 });
 
-test.serial("verify transaction after `transferFrom` with fee.", async t => {
+test.serial("verify transactions after `transferFrom` with fee.", async t => {
   (await Promise.all(allActors.map(actor => actor.transaction(BigInt(10))))).forEach(result =>
     t.like(result, {
       Ok: {
@@ -1082,7 +1082,7 @@ test.serial("verify users allowance after `transferFrom` with zero fee.", async 
   ).forEach(result => t.is(result, BigInt(0)));
 });
 
-test.serial("verify transaction after `transferFrom` with zero fee.", async t => {
+test.serial("verify transactions after `transferFrom` with zero fee.", async t => {
   (await Promise.all(allActors.map(actor => actor.transaction(BigInt(11))))).forEach(result =>
     t.like(result, {
       Ok: {
@@ -1221,7 +1221,7 @@ test.serial("verify users balance after `transfer` with fee.", async t => {
   );
 });
 
-test.serial("verify transaction after `transfer` with fee.", async t => {
+test.serial("verify transactions after `transfer` with fee.", async t => {
   (await Promise.all(allActors.map(actor => actor.transaction(BigInt(15))))).forEach(result =>
     t.like(result, {
       Ok: {
@@ -1326,7 +1326,7 @@ test.serial("verify users balance after `transfer` with zero fee.", async t => {
   );
 });
 
-test.serial("verify transaction after `transfer` with zero fee.", async t => {
+test.serial("verify transactions after `transfer` with zero fee.", async t => {
   (await Promise.all(allActors.map(actor => actor.transaction(BigInt(19))))).forEach(result =>
     t.like(result, {
       Ok: {
@@ -1385,3 +1385,121 @@ test.serial("verify transaction after `transfer` with zero fee.", async t => {
   );
 });
 
+test.serial("error on `withdraw` with amount exceed u64 range.", async t => {
+  t.deepEqual(await aliceWicpActor.withdraw(BigInt("0xffffffffffffffffffff"), aliceAccountId.toHex()), {
+    Err: {Other: "failed to cast usize from nat"}
+  });
+});
+
+test.serial("error on `withdraw` with invalid e8s amount.", async t => {
+  t.deepEqual(await johnWicpActor.withdraw(BigInt(0), johnAccountId.toHex()), {
+    Err: {InvalidE8sAmount: null}
+  });
+});
+
+test.serial("error on `withdraw` with invalid account id.", async t => {
+  t.deepEqual(await aliceWicpActor.withdraw(BigInt(10_000), `${aliceAccountId.toHex()}asdfasfjdklfjsf"`), {
+    Err: {InvalidAccountId: null}
+  });
+});
+
+test.serial("error on `withdraw` when owner have insufficient balance WICP.", async t => {
+  t.deepEqual(await aliceWicpActor.withdraw(BigInt(200_000_001), aliceAccountId.toHex()), {
+    Err: {InsufficientBalance: null}
+  });
+  t.deepEqual(await bobWicpActor.withdraw(BigInt(100_000_001), bobAccountId.toHex()), {
+    Err: {InsufficientBalance: null}
+  });
+  t.deepEqual(await johnWicpActor.withdraw(BigInt(1), johnAccountId.toHex()), {
+    Err: {InsufficientBalance: null}
+  });
+  t.deepEqual(await custodianWicpActor.withdraw(BigInt(69_700_000_001), custodianAccountId.toHex()), {
+    Err: {InsufficientBalance: null}
+  });
+});
+
+test.serial("withdraw WICP.", async t => {
+  t.deepEqual(await aliceWicpActor.withdraw(BigInt(200_000_000), aliceAccountId.toHex()), {
+    Ok: BigInt(23)
+  });
+  t.deepEqual(await bobWicpActor.withdraw(BigInt(100_000_000), bobAccountId.toHex()), {
+    Ok: BigInt(24)
+  });
+  t.deepEqual(await custodianWicpActor.withdraw(BigInt(69_700_000_000), custodianAccountId.toHex()), {
+    Ok: BigInt(25)
+  });
+});
+
+test.serial("verify stats after `withdraw`.", async t => {
+  const result = await custodianWicpActor.stats();
+  t.truthy(result.cycles);
+  t.is(result.icps, BigInt(0));
+  t.is(result.total_supply, BigInt(0));
+  t.is(result.total_transactions, BigInt(25));
+  t.is(result.total_unique_holders, BigInt(0));
+  t.truthy(await custodianWicpActor.cycles());
+  t.is(await custodianWicpActor.icps(), BigInt(0));
+  t.is(await custodianWicpActor.totalSupply(), BigInt(0));
+  t.is(await custodianWicpActor.totalTransactions(), BigInt(25));
+  t.is(await custodianWicpActor.totalUniqueHolders(), BigInt(0));
+});
+
+test.serial("verify users balance after `withdraw`.", async t => {
+  (await Promise.all(allActors.map(actor => actor.balanceOf(aliceIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(0))
+  );
+  (await Promise.all(allActors.map(actor => actor.balanceOf(bobIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(0))
+  );
+  (await Promise.all(allActors.map(actor => actor.balanceOf(johnIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(0))
+  );
+  (await Promise.all(allActors.map(actor => actor.balanceOf(custodianIdentity.getPrincipal())))).forEach(result =>
+    t.is(result, BigInt(0))
+  );
+});
+
+test.serial("verify transactions after `withdraw`.", async t => {
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(23))))).forEach(result =>
+    t.like(result, {
+      Ok: {
+        operation: "withdraw",
+        details: [
+          ["from", {Principal: aliceIdentity.getPrincipal()}],
+          ["to", {TextContent: aliceAccountId.toHex()}],
+          ["amount", {NatContent: BigInt(200_000_000)}],
+          ["block_height", {Nat64Content: BigInt(8)}]
+        ],
+        caller: aliceIdentity.getPrincipal()
+      }
+    })
+  );
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(24))))).forEach(result =>
+    t.like(result, {
+      Ok: {
+        operation: "withdraw",
+        details: [
+          ["from", {Principal: bobIdentity.getPrincipal()}],
+          ["to", {TextContent: bobAccountId.toHex()}],
+          ["amount", {NatContent: BigInt(100_000_000)}],
+          ["block_height", {Nat64Content: BigInt(9)}]
+        ],
+        caller: bobIdentity.getPrincipal()
+      }
+    })
+  );
+  (await Promise.all(allActors.map(actor => actor.transaction(BigInt(25))))).forEach(result =>
+    t.like(result, {
+      Ok: {
+        operation: "withdraw",
+        details: [
+          ["from", {Principal: custodianIdentity.getPrincipal()}],
+          ["to", {TextContent: custodianAccountId.toHex()}],
+          ["amount", {NatContent: BigInt(69_700_000_000)}],
+          ["block_height", {Nat64Content: BigInt(10)}]
+        ],
+        caller: custodianIdentity.getPrincipal()
+      }
+    })
+  );
+});
