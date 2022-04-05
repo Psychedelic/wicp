@@ -1503,3 +1503,48 @@ test.serial("verify transactions after `withdraw`.", async t => {
     })
   );
 });
+
+test.serial("verify users ICP balance after `withdraw`.", async t => {
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(ledgerAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(0)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(minterAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(0)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(wicpAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(0)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(aliceAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(10_199_990_000)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(bobAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(9_099_990_000)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(johnAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(10_999_940_000)}
+  );
+  t.deepEqual(
+    await ledgerActor.account_balance({
+      account: Array.from(Buffer.from(custodianAccountId.toHex(), "hex"))
+    }),
+    {e8s: BigInt(69_699_990_000)}
+  );
+});
