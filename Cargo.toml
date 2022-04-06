@@ -1,4 +1,16 @@
-[workspace]
-members = [
-    "src",
-]
+[package]
+name = "wicp"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+candid = "0.7.4"
+ic-cdk = "0.5.0"
+ic-cdk-macros = "0.5.0"
+serde = "1.0.132"
+dfn_core = { git = "https://github.com/dfinity/ic", tag = "rosetta-1.4.0" }
+dfn_protobuf = { git = "https://github.com/dfinity/ic", tag = "rosetta-1.4.0" }
+ic-types = { git = "https://github.com/dfinity/ic", tag = "rosetta-1.4.0" }
+ledger-canister = { git = "https://github.com/dfinity/ic", tag = "rosetta-1.4.0" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic", tag = "rosetta-1.4.0" }
+num-traits = "0.2.14"

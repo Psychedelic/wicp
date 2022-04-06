@@ -1,8 +1,12 @@
 {
   "wicp": {
-    "ic": "utozz-siaaa-aaaam-qaaxq-cai"
+    "ic": "utozz-siaaa-aaaam-qaaxq-cai",
+    "local": "rrkah-fqaaa-aaaaa-aaaaq-cai"
   },
   "wicp_test": {
     "ic": "wjsrf-myaaa-aaaam-qaayq-cai"
+  },
+  "ledger": {
+    "local": "ryjl3-tyaaa-aaaaa-aaaba-cai"
   }
 }
