@@ -1,3 +1,5 @@
+import test from "ava";
+
 import {
   aliceAccountId,
   aliceIdentity,
@@ -20,7 +22,6 @@ import {
   minterIdentity,
   wicpAccountId
 } from "../setup";
-import test from "ava";
 
 const normalActors = [aliceWicpActor, bobWicpActor, johnWicpActor];
 const allActors = [...normalActors, custodianWicpActor];

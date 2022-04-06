@@ -1,3 +1,6 @@
+import {Principal} from "@dfinity/principal";
+import test, {Assertions} from "ava";
+
 import {
   aliceIdentity,
   aliceWicpActor,
@@ -6,8 +9,6 @@ import {
   custodianWicpActor,
   johnWicpActor
 } from "../setup";
-import test, {Assertions} from "ava";
-import {Principal} from "@dfinity/principal";
 
 const normalActors = [aliceWicpActor, bobWicpActor, johnWicpActor];
 const allActors = [...normalActors, custodianWicpActor];

@@ -1,13 +1,15 @@
-import {Actor, HttpAgent, Identity, Nonce, makeNonceTransform} from "@dfinity/agent";
-import {AccountIdentifier} from "@dfinity/nns";
-import {Ed25519KeyIdentity} from "@dfinity/identity";
-import {_SERVICE as LedgerService} from "./factory/ledger_idl.d";
-import {Principal} from "@dfinity/principal";
-import {_SERVICE as WicpService} from "./factory/wicp_idl.d";
-import fetch from "isomorphic-fetch";
-import {idlFactory as ledgerIdlFactory} from "./factory/ledger_idl";
 import {readFileSync} from "fs";
+
+import {Actor, HttpAgent, Identity, Nonce, makeNonceTransform} from "@dfinity/agent";
+import {Ed25519KeyIdentity} from "@dfinity/identity";
+import {AccountIdentifier} from "@dfinity/nns";
+import {Principal} from "@dfinity/principal";
+import fetch from "isomorphic-fetch";
+
+import {idlFactory as ledgerIdlFactory} from "./factory/ledger_idl";
+import {_SERVICE as LedgerService} from "./factory/ledger_idl.d";
 import {idlFactory as wicpIdlFactory} from "./factory/wicp_idl";
+import {_SERVICE as WicpService} from "./factory/wicp_idl.d";
 
 export const aliceIdentity = Ed25519KeyIdentity.generate();
 export const bobIdentity = Ed25519KeyIdentity.generate();

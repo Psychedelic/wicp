@@ -120,7 +120,6 @@ mod ledger {
             call_with_cleanup(LEDGER_CANISTER_ID, "block_pb", protobuf, block_height)
                 .await
                 .map_err(|_| TokenError::BlockError)?;
-
         let block = match block_response.ok_or(TokenError::BlockError)? {
             Ok(encode_block) => encode_block,
             Err(e) => {
@@ -139,7 +138,6 @@ mod ledger {
         }
         .decode()
         .map_err(|_| TokenError::BlockError)?;
-
         match block.transaction.operation {
             Operation::Transfer {
                 from,
