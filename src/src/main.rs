@@ -23,6 +23,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::convert::Into;
 use std::iter::FromIterator;
 use std::string::String;
+use compile_time_run::run_command_str;
 
 #[derive(CandidType, Default, Deserialize)]
 pub struct TxLog {
@@ -798,6 +799,27 @@ fn get_block_used() -> HashSet<u64> {
 #[candid_method(query, rename = "isBlockUsed")]
 fn is_block_used(block_number: BlockHeight) -> bool {
     ic::get::<UsedBlocks>().contains(&block_number)
+}
+
+// ==================================================================================================
+// cover metadata
+// ==================================================================================================
+#[query(name = "gitCommitHash")]
+#[candid_method(query, rename = "gitCommitHash")]
+fn git_commit_hash() -> &'static str {
+    run_command_str!("git", "rev-parse", "HEAD")
+}
+
+#[query(name = "rustToolchainInfo")]
+#[candid_method(query, rename = "rustToolchainInfo")]
+fn rust_toolchain_info() -> &'static str {
+    run_command_str!("rustup", "show")
+}
+
+#[query(name = "dfxInfo")]
+#[candid_method(query, rename = "dfxInfo")]
+fn dfx_info() -> &'static str {
+    run_command_str!("dfx", "--version")
 }
 
 #[cfg(any(target_arch = "wasm32", test))]
