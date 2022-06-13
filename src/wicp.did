@@ -42,12 +42,14 @@ service : (
   approve : (principal, nat) -> (Result);
   balanceOf : (principal) -> (nat) query;
   decimals : () -> (nat8) query;
+  dfxInfo : () -> (text) query;
   getAllowanceSize : () -> (nat64) query;
   getBlockUsed : () -> (vec nat64) query;
   getHolders : (nat64, nat64) -> (vec record { principal; nat }) query;
   getMetadata : () -> (Metadata) query;
   getTokenInfo : () -> (TokenInfo) query;
   getUserApprovals : (principal) -> (vec record { principal; nat }) query;
+  gitCommitHash : () -> (text) query;
   historySize : () -> (nat64) query;
   isBlockUsed : (nat64) -> (bool) query;
   logo : () -> (text) query;
@@ -55,6 +57,7 @@ service : (
   mintFor : (opt vec nat8, nat64, principal) -> (Result);
   name : () -> (text) query;
   owner : () -> (principal) query;
+  rustToolchainInfo : () -> (text) query;
   setFee : (nat) -> ();
   setFeeTo : (principal) -> ();
   setGenesis : () -> (Result);
