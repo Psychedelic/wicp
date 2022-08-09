@@ -54,6 +54,7 @@ struct StatsData {
     fee_to: Principal,
     history_size: usize,
     deploy_time: u64,
+    ledger: CanisterId,
 }
 
 impl Default for StatsData {
@@ -69,6 +70,7 @@ impl Default for StatsData {
             fee_to: Principal::anonymous(),
             history_size: 0,
             deploy_time: 0,
+            ledger: CanisterId::from_u64(2),
         }
     }
 }
@@ -142,7 +144,6 @@ thread_local! {
     static GENESIS: RefCell<Genesis> = RefCell::new(Genesis::default());
 }
 
-const LEDGER_CANISTER_ID: CanisterId = CanisterId::from_u64(2);
 const THRESHOLD: Tokens = Tokens::from_e8s(0); // 0;
 const ICPFEE: Tokens = Tokens::from_e8s(10000);
 
@@ -158,6 +159,7 @@ fn init(
     fee: Nat,
     fee_to: Principal,
     cap: Principal,
+    _ledger: Option<Principal>
 ) {
     STATS.with(|s| {
         let mut stats = s.borrow_mut();
@@ -171,6 +173,13 @@ fn init(
         stats.fee_to = fee_to;
         stats.history_size = 1;
         stats.deploy_time = ic::time();
+        if _ledger.is_some() {
+            let ledger = match CanisterId::new(PrincipalId::from(_ledger.unwrap())) {
+                Ok(c) => c,
+                Err(_) => panic!("ledger is not a valid principal"),
+            };
+            stats.ledger = ledger;
+        }
     });
     handshake(1_000_000_000_000, Some(cap));
     _balance_ins(owner, initial_supply.clone());
@@ -321,7 +330,7 @@ async fn mint(sub_account: Option<Subaccount>, block_height: BlockHeight) -> TxR
     let caller = ic::caller();
 
     let response: Result<BlockRes, (Option<i32>, String)> =
-        call_with_cleanup(LEDGER_CANISTER_ID, "block_pb", protobuf, block_height).await;
+        call_with_cleanup(_get_ledger(), "block_pb", protobuf, block_height).await;
     let encode_block = match response {
         Ok(BlockRes(res)) => match res {
             Some(result_encode_block) => match result_encode_block {
@@ -427,7 +436,7 @@ async fn mint_for(
     let caller = ic::caller();
 
     let response: Result<BlockRes, (Option<i32>, String)> =
-        call_with_cleanup(LEDGER_CANISTER_ID, "block_pb", protobuf, block_height).await;
+        call_with_cleanup(_get_ledger(), "block_pb", protobuf, block_height).await;
     let encode_block = match response {
         Ok(BlockRes(res)) => match res {
             Some(result_encode_block) => match result_encode_block {
@@ -547,7 +556,7 @@ async fn withdraw(value: u64, to: String) -> TxReceipt {
     _balance_ins(caller, caller_balance.clone() - value_nat.clone());
     _supply_dec(value_nat.clone());
     let result: Result<(u64,), _> = ic::call(
-        Principal::from(CanisterId::get(LEDGER_CANISTER_ID)),
+        Principal::from(CanisterId::get(_get_ledger())),
         "send_dfx",
         (args,),
     )
@@ -917,6 +926,13 @@ fn _get_owner() -> Principal {
     STATS.with(|s| {
         let stats = s.borrow();
         stats.owner
+    })
+}
+
+fn _get_ledger() -> CanisterId {
+    STATS.with(|s| {
+        let stats = s.borrow();
+        stats.ledger
     })
 }
 
