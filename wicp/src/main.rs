@@ -159,7 +159,7 @@ fn init(
     fee: Nat,
     fee_to: Principal,
     cap: Principal,
-    _ledger: Option<Principal>
+    ledger: Option<Principal>
 ) {
     STATS.with(|s| {
         let mut stats = s.borrow_mut();
@@ -173,12 +173,12 @@ fn init(
         stats.fee_to = fee_to;
         stats.history_size = 1;
         stats.deploy_time = ic::time();
-        if _ledger.is_some() {
-            let ledger = match CanisterId::new(PrincipalId::from(_ledger.unwrap())) {
+        if ledger.is_some() {
+            let ledger_canister_id = match CanisterId::new(PrincipalId::from(ledger.unwrap())) {
                 Ok(c) => c,
                 Err(_) => panic!("ledger is not a valid principal"),
             };
-            stats.ledger = ledger;
+            stats.ledger = ledger_canister_id;
         }
     });
     handshake(1_000_000_000_000, Some(cap));
