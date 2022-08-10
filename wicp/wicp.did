@@ -37,6 +37,7 @@ service : (
   nat,
   principal,
   principal,
+  opt principal
 ) -> {
   allowance : (principal, principal) -> (nat) query;
   approve : (principal, nat) -> (Result);
